@@ -138,6 +138,12 @@ public interface Images extends Resources {
    */
   @Source("com/google/appinventor/images/label.png")
   ImageResource label();
+  
+  /**
+   * Designer palette item: logger
+   */
+  @Source("com/google/appinventor/images/logger.png")
+  ImageResource loggerComponent();
 
   /**
    * Designer palette item: listbox component
