@@ -1,0 +1,13 @@
+To Build new companion app
+
+>ant installplay (output: BUILD SUCCESSFUL)
+>ant PlayApp (file ends up in ./build/buildserver/MIT AI2 Companion.apk)
+
+Send that to phone, delete old one manually, install this one
+
+
+------------------------------
+
+Build Servers Again
+
+TODO
