@@ -606,10 +606,25 @@ Blockly.LANG_LISTS_POSITION_IN_INPUT_LIST = 'list';
 Blockly.LANG_LISTS_POSITION_IN_TOOLTIP = 'Find the position of the thing in the list. If it\'s not in '
   + 'the list, return 0.';
 
-Blockly.LANG_LISTS_PICK_RANDOM_ITEM_HELPURL = 'http://appinventor.mit.edu/explore/ai2/support/blocks/lists#pickrandomitem';
+Blockly.LANG_LISTS_PICK_RANDOM_ITEM_FIRST = 'first';
+Blockly.LANG_LISTS_PICK_RANDOM_ITEM_RANDOM = 'random';
+Blockly.LANG_LISTS_PICK_RANDOM_ITEM_LAST = 'last';
+
+Blockly.LANG_LISTS_PICK_RANDOM_ITEM_HELPURL_RANDOM = 'http://appinventor.mit.edu/explore/ai2/support/blocks/lists#pickrandomitem';
+Blockly.LANG_LISTS_PICK_RANDOM_ITEM_HELPURL_FIRST = 'http://appinventor.mit.edu/explore/ai2/support/blocks/lists';
+Blockly.LANG_LISTS_PICK_RANDOM_ITEM_HELPURL_LAST = 'http://appinventor.mit.edu/explore/ai2/support/blocks/lists';
+
+
 Blockly.LANG_LISTS_PICK_RANDOM_TITLE_PICK_RANDOM = 'pick a random item';
 Blockly.LANG_LISTS_PICK_RANDOM_ITEM_INPUT_LIST = 'list';
-Blockly.LANG_LISTS_PICK_RANDOM_TOOLTIP = 'Pick an item at random from the list.';
+Blockly.LANG_LISTS_PICK_RANDOM_TOOLTIP_RANDOM = 'Pick an item at random from the list.';
+Blockly.LANG_LISTS_PICK_RANDOM_TOOLTIP_FIRST = 'Pick an item at random from the list.';
+Blockly.LANG_LISTS_PICK_RANDOM_TOOLTIP_LAST = 'Pick an item at random from the list.';
+
+
+Blockly.LANG_LISTS_PICK_RANDOM_TITLE_PICK_FIRST = 'pick the first item';
+
+Blockly.LANG_LISTS_PICK_RANDOM_TITLE_PICK_LAST = 'pick the last item';
 
 Blockly.LANG_LISTS_REPLACE_ITEM_HELPURL = 'http://appinventor.mit.edu/explore/ai2/support/blocks/lists#replace';
 Blockly.LANG_LISTS_REPLACE_ITEM_TITLE_REPLACE = 'replace list item';
