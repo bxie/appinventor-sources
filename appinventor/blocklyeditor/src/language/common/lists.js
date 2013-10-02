@@ -193,6 +193,7 @@ Blockly.Language.lists_pick_random_item = {
     var thisBlock = this;
     this.setTooltip(function() {
     	var op = thisBlock.getTitleValue('OP');
+    	console.log(op);
     	return Blockly.Language.lists_pick_random_item.TOOLTIPS[op];
     });
     //Blockly.Language.setTooltip(this, Blockly.LANG_LISTS_PICK_RANDOM_TOOLTIP);
