@@ -1106,3 +1106,11 @@ Blockly.LANG_COMPONENT_BLOCK_WEBVIEWER_HELPURL = "http://appinventor.mit.edu/exp
 Blockly.LANG_COMPONENT_BLOCK_WEBVIEWER_PROPERTIES_HELPURL = 'http://appinventor.mit.edu/explore/content/notready.html#webviewerproperties';
 Blockly.LANG_COMPONENT_BLOCK_WEBVIEWER_EVENTS_HELPURL = 'http://appinventor.mit.edu/explore/content/notready.html#webviewerevents';
 Blockly.LANG_COMPONENT_BLOCK_WEBVIEWER_METHODS_HELPURL = 'http://appinventor.mit.edu/explore/content/notready.html#webviewermethods';
+
+
+//For Assignment 4, "Not-Not" Block
+Blockly.LANG_LOGIC_NEGATE_NEGATE_HELPURL = 'http://appinventor.mit.edu/explore/ai2/support/blocks/logic#notnot';
+Blockly.LANG_LOGIC_NEGATE_NEGATE_INPUT_NOT = 'notnot';
+Blockly.LANG_LOGIC_NEGATE_NEGATE_TOOLTIP = 'Returns true if the input is true.\n' +
+  'Returns false if the input is false.';
+
