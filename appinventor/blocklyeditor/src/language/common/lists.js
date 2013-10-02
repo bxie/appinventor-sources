@@ -189,13 +189,18 @@ Blockly.Language.lists_pick_random_item = {
   init : function() {
     this.setColour(Blockly.LIST_CATEGORY_HUE);
     this.setOutput(true, null);
-    this.appendValueInput('LIST').setCheck(Blockly.Language.YailTypeToBlocklyType("list",Blockly.Language.INPUT)).appendTitle('pick a random item').appendTitle('list');
+    this.appendValueInput('LIST').setCheck(Blockly.Language.YailTypeToBlocklyType("list",Blockly.Language.INPUT)).appendTitle('pick').appendTitle(new Blockly.FieldDropdown(this.OPERATORS),'OP').appendTitle('item list');
     Blockly.Language.setTooltip(this, Blockly.LANG_LISTS_PICK_RANDOM_TOOLTIP);
     this.appendCollapsedInput().appendTitle('pick random', 'COLLAPSED_TEXT');
   },
   onchange: Blockly.WarningHandler.checkErrors,
   typeblock: [{ translatedName: Blockly.LANG_LISTS_PICK_RANDOM_TITLE_PICK_RANDOM }]
 };
+
+Blockly.Language.lists_pick_random_item.OPERATORS =
+  [[ 'first', 'FIRST'], 
+  ['random', 'RANDOM'], 
+  ['last', 'LAST'] ];
 
 Blockly.Language.lists_position_in = {
   // Postion of item in list.

@@ -199,16 +199,27 @@ Blockly.Yail.lists_position_in = function() {
 };
 
 Blockly.Yail.lists_pick_random_item = function() {
-  // Pick random item
-  var argument0 = Blockly.Yail.valueToCode(this, 'LIST', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyListCode;
-  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-list-pick-random" + Blockly.Yail.YAIL_SPACER;
+  // Pick first, random, or last item
+  var mode = this.getTitleValue('OP');
+  var tuple = Blockly.Yail.lists_pick_random_item.OPERATORSS[mode];
+  var operator = tuple[0];
+  var operator2 = tuple[1];
+  var order = tuple[2];
+  var argument0 = Blockly.Yail.valueToCode(this, 'LIST', order) || Blockly.Yail.emptyListCode;
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + operator + Blockly.Yail.YAIL_SPACER;
   code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
   code = code + argument0;
   code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
   code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
   code = code + "list" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
-  code = code + Blockly.Yail.YAIL_DOUBLE_QUOTE + "pick random item" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  code = code + Blockly.Yail.YAIL_DOUBLE_QUOTE + operator2 + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
   return [ code, Blockly.Yail.ORDER_ATOMIC ];
+};
+
+Blockly.Yail.lists_pick_random_item.OPERATORSS = {
+  FIRST: ['yail-list-pick-first', 'pick first item', Blockly.Yail.ORDER_NONE],
+  RANDOM: ['yail-list-pick-random', 'pick random item', Blockly.Yail.ORDER_NONE],
+  LAST: ['yail-list-pick-last', 'pick last item', Blockly.Yail.ORDER_NONE]
 };
 
 Blockly.Yail.lists_is_empty = function() {
