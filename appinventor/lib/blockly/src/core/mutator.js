@@ -168,12 +168,14 @@ Blockly.Mutator.prototype.setVisible = function(visible) {
   }
   if (visible) {
     // Create the bubble.
-    this.bubble_ = new Blockly.Bubble(this.block_.workspace,
+    this.bubble_ = new Blockly.Bubble(this.block_.workspace, //larger bubble. attach mutator method. when clicked, don't propogate click event. add flag to tell mutator bubble (so comments don't close)
         this.createEditor_(), this.block_.svg_.svgGroup_,
         this.iconX_, this.iconY_, null, null);
     var thisObj = this;
-    this.flyout_.init(this.workspace_, false);
+    this.flyout_.init(this.workspace_, false); //workspace: white area in mutator
     this.flyout_.show(this.quarkXml_);
+    
+    //if workspace or flyout clicked, don't close. capturing click even on larger bubble containing both?
 
     this.rootBlock_ = this.block_.decompose(this.workspace_);
     var blocks = this.rootBlock_.getDescendants();
