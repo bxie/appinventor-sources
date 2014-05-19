@@ -108,6 +108,7 @@ Blockly.ReplMgr.buildYail = function() {
 
     blocks = Blockly.mainWorkspace.getTopBlocks(true);
     var success = function() {
+        //BXX
         if (this.block.replError)
             this.block.replError = null;
         Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors();
@@ -361,6 +362,7 @@ Blockly.ReplMgr.putYail = (function() {
     return engine.putYail;
 })();
 
+//BXX: 
 Blockly.ReplMgr.processRetvals = function(responses) {
     var block;
     for (var i = 0; i < responses.length; i++) {
@@ -368,7 +370,7 @@ Blockly.ReplMgr.processRetvals = function(responses) {
         console.log("processRetVals: " + JSON.stringify(r));
         switch(r.type) {
         case "return":
-            if (r.blockid != "-1") {
+            if (r.blockid != "-1") { //BXX: Do It error. No block id (set for do it, watch). Future code will have block id with errors
                 block = Blockly.mainWorkspace.getBlockById(r.blockid);
                 if (r.status == "OK") {
                     block.replError = null;
@@ -393,6 +395,7 @@ Blockly.ReplMgr.processRetvals = function(responses) {
         case "popScreen":
             window.parent.BlocklyPanel_popScreen();
             break;
+        //BXX: runtime error. When error occurs, call log data
         case "error":
             if (!this.runtimeError) {
                 this.runtimeError = new goog.ui.Dialog(null, true);

@@ -41,28 +41,50 @@
 	  position: absolute;
 	}
     </style>
-
+    <script type="text/javascript">
+      goog.require('goog.dom');
+      goog.require('goog.net.XhrIo');
+    </script>
     <script type="text/javascript">
       function init() {
-        // We expect window.location.hash to have the form:
-        // projectId_formName, and to be unique among
-        // all the Blockly instances created in this App Inventor session.
-        var formName = window.location.hash.substr(1);
-        if (!window.parent.Blocklies) {
-          // We keep a set of Blockly objects indexed by name
-          // of the form for which they are the blocks editor
-          window.parent.Blocklies = {};
-        }
-        window.parent.Blocklies[formName] = Blockly;
-        Blockly.ReplMgr.formName = formName; <!-- So we can tell the AssetManager which form we are on. -->
-        if (window.parent.ReplState === undefined) {
-          window.parent.ReplState = new Blockly.ReplStateObj(); // There should be one of these for the whole system
-        }
-        window.parent.ReplState.phoneState = {}; <!-- Reset the phone state when we are reloaded -->
-        Blockly.BlocklyEditor.startup(document.body, formName);
-        Blockly.ComponentTypes.populateTypes();
-        window.parent.BlocklyPanel_initBlocksArea(formName);
-        window.parent.BlocklyPanel_checkWarningState(formName);
+        tracking_url = 'http://127.0.0.1:5984' //BXX for tracking
+
+        //couchDB db name begins with letter, only lower case char in name
+        projectAndScreenId = "proj"+window.location.hash.substr(1).toLowerCase();  
+
+        goog.net.XhrIo.send(tracking_url+"/"+projectAndScreenId, function(e){
+          // We expect window.location.hash to have the form:
+          // projectId_formName, and to be unique among
+          // all the Blockly instances created in this App Inventor session.
+          var formName = window.location.hash.substr(1);
+          if (!window.parent.Blocklies) {
+            // We keep a set of Blockly objects indexed by name
+            // of the form for which they are the blocks editor
+            window.parent.Blocklies = {};
+          }
+          window.parent.Blocklies[formName] = Blockly;
+          Blockly.ReplMgr.formName = formName; <!-- So we can tell the AssetManager which form we are on. -->
+          if (window.parent.ReplState === undefined) {
+            window.parent.ReplState = new Blockly.ReplStateObj(); // There should be one of these for the whole system
+          }
+          window.parent.ReplState.phoneState = {}; <!-- Reset the phone state when we are reloaded -->
+          Blockly.BlocklyEditor.startup(document.body, formName);
+          Blockly.ComponentTypes.populateTypes();
+
+          //window.parent.trackIds=[];
+          //BXX: 
+          // goog.get(ids, function(ids){ //get info from couchdb
+          //   window.parent.trackIds=ids;
+          //   window.parent.BlocklyPanel_initBlocksArea(formName);
+          //   window.parent.BlocklyPanel_checkWarningState(formName);
+          //   window.parent.trackIds.push(id); //only new values
+          // });
+
+          window.parent.BlocklyPanel_initBlocksArea(formName);
+          window.parent.BlocklyPanel_checkWarningState(formName);
+        }, 
+        "PUT");
+        console.log("init complete.");
       }
     </script>
   </head>

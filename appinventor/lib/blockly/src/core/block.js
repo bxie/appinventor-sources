@@ -37,6 +37,8 @@ goog.require('Blockly.Warning');
 goog.require('Blockly.Workspace');
 goog.require('Blockly.Xml');
 goog.require('goog.Timer');
+goog.require('goog.net.XhrIo'); //BXX: For sending to couchdb
+
 
 
 /**
@@ -44,6 +46,8 @@ goog.require('goog.Timer');
  * @private
  */
 Blockly.uidCounter_ = 0;
+tracking_url = 'http://127.0.0.1:5984' //BXX for tracking
+dbName = "proj"+window.location.hash.substr(1).toLowerCase(); //gets project name and screen name with underscore in between
 
 /**
  * Class for one block.
@@ -52,6 +56,7 @@ Blockly.uidCounter_ = 0;
  *     type-specific functions for this block.
  * @constructor
  */
+ //TODO: Log here
 Blockly.Block = function(workspace, prototypeName) {
   this.id = ++Blockly.uidCounter_;
   this.outputConnection = null;
@@ -93,6 +98,14 @@ Blockly.Block = function(workspace, prototypeName) {
   if ((!this.isInFlyout) && goog.isFunction(this.onchange)) {
     Blockly.bindEvent_(workspace.getCanvas(), 'blocklyWorkspaceChange', this,
                        this.onchange);
+  }
+  //BXX: Logging creation of blocks
+  if(workspace==Blockly.mainWorkspace){
+    content = generateContent(this.id, this.type, "create");
+    sendToDb(dbName, content);
+
+    console.log("Creation of Block "+ this.id+" "+this.type);
+    //console.log("Creation for ", this);
   }
 };
 
@@ -265,6 +278,16 @@ Blockly.Block.prototype.unselect = function() {
  * @param {boolean} animate If true, show a disposal animation and sound.
  */
 Blockly.Block.prototype.dispose = function(healStack, animate) {
+  //BXX: Log disposal of block
+  if(this.workspace==Blockly.mainWorkspace){
+    content = generateContent(this.id, this.type, "dispose");
+    sendToDb(dbName, content);
+
+    console.log("Disposal of Block "+ this.id);
+
+    //console.log("Removal for ", this);
+  }
+
   // Switch off rerendering.
   this.rendered = false;
   this.unplug(healStack);
@@ -884,10 +907,24 @@ Blockly.Block.prototype.bumpNeighbours_ = function() {
         // Only bump blocks if they are from different tree structures.
         if (otherConnection.sourceBlock_.getRootBlock() != rootBlock) {
           // Always bump the inferior block.
+          // BXX: Log bump away
+          var blockA = connection.sourceBlock_;
+          var blockB = otherConnection.sourceBlock_;
           if (connection.isSuperior()) {
+            content = generateContent(blockA.id, blockA.type, "bump", blockB.id);
+            sendToDb(dbName, content);
+
+            console.log("Bump away 1 (blocka): ", blockA);
+            console.log("Bump away 1 (blockb): ", blockB);
+            
             otherConnection.bumpAwayFrom_(connection);
           } else {
+            content = generateContent(blockB.id, blockB.type, "bump", blockA.id);
+            sendToDb(dbName, content);
+
             connection.bumpAwayFrom_(otherConnection);
+            console.log("Bump away 2 (blockB): ", blockB);
+            console.log("Bump away 2 (blockA): ", blockA);
           }
         }
       }
@@ -1683,8 +1720,101 @@ Blockly.Block.prototype.setErrorIconText = function(text) {
  * Lays out and reflows a block based on its contents and settings.
  */
 Blockly.Block.prototype.render = function() {
+  //BXX: Logging creation AND MOVING (don't want) of block
+  // if(this.workspace==Blockly.mainWorkspace){
+  //   var mainBlocks = Blockly.mainWorkspace.getAllBlocks();
+  //   var alreadyInWorkspace = false;
+
+  //   for(var i=0; i<mainBlocks.length; i++){
+  //     if(mainBlocks[i].id==this.id){
+  //       alreadyInWorkspace = true;
+  //     }
+  //   }
+  //   if(!alreadyInWorkspace){
+  //     console.log("Creation of Block "+ this.id);
+  //   }
+  //   console.log("Creation of Block "+ this.id);
+
+  //   //console.log("Creation for ", this);
+  // }
+  
   if (!this.svg_) {
     throw 'Uninitialized block cannot be rendered.  Call block.initSvg()';
   }
   this.svg_.render();
 };
+
+//BXX: Helper function to get UUID
+//Not used due to synch issues
+// var getUUID = function(){
+//      goog.net.XhrIo.send(tracking_url+"/_uuids", function(e){
+//       var xhr = e.target;
+//       var obj = xhr.getResponseJson();
+//       uuid = obj.uuids[0];
+//       return uuid
+//       });
+// };
+
+
+
+// var sendToDb = function(db_url, content, sendToDB){
+//   uuid = generateUUID();
+//   sendToDbHelper(db_url+uuid,content);
+// };
+
+// var sendToDbHelper = function(db_url, content){
+//   goog.net.XhrIo.send(db_url+getUUID(), function(e){
+//         var xhr = e.target;
+//         var obj = xhr.getResponseJson();
+//         console.log("SENT: ", obj);
+//       }, 
+//       "PUT",
+//       content);
+// };
+
+/**
+* Send (PUT) content to db_name(CouchDB instance under tracking_url)
+* @param db_name Name of database/table
+* @param content String representation of JSON object
+*/
+sendToDb = function(db_name, content){
+  uuid = generateUUID();
+  goog.net.XhrIo.send(tracking_url+"/"+db_name+"/"+uuid, function(e){
+        var xhr = e.target;
+        var obj = xhr.getResponseJson();
+      }, 
+      "PUT",
+      content);
+  return true;
+};
+
+/**
+* Generate a random UUID
+*/
+generateUUID = function() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxxxxxxxxxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+};
+
+/**
+* Generates string representation of JSON object to pass to CouchDb (Traking DB)
+* @param {int} id The Block ID number
+* @param {string} type Block type
+* @param {string} action The action being done to the block: create, delete, connect, disconnect
+* @param {string} optional Additional information. Varies by action type.
+* @return {string} String representation of JSON object
+*/
+generateContent = function(id, type, action, optional){
+  if(!optional){
+    optional="";
+  }
+  content = '{"blockId":"'+id+'", "type":"'+type+'", "action":"'+action+'", "optional":"'+optional+'", "time":'+Date.now()+'}';
+      //'{"blockId":'+this.id+', "action":"create", "time":'+Date.now()+'}';
+
+  return content;
+}

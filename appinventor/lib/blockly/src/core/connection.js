@@ -28,6 +28,9 @@ goog.provide('Blockly.ConnectionDB');
 
 goog.require('Blockly.Workspace');
 
+tracking_url = 'http://127.0.0.1:5984'; //BXX for tracking. DUPLICATE CODE IN BLOCK.JS.
+dbName = "proj"+window.location.hash.substr(1).toLowerCase();
+
 
 /**
  * Class for a connection between blocks.
@@ -84,6 +87,14 @@ Blockly.Connection.prototype.isSuperior = function() {
  * @param {!Blockly.Connection} otherConnection Connection to connect to.
  */
 Blockly.Connection.prototype.connect = function(otherConnection) {
+  //BXX: Logs when blocks are connected
+  if(this.sourceBlock_.workspace==Blockly.mainWorkspace){
+    content = generateContent(this.sourceBlock_.id, this.sourceBlock_.type, "connect", otherConnection.sourceBlock_.id);
+    sendToDb(dbName, content);
+    console.log("Connection in m.w. for Block "+ this.sourceBlock_.id + " and Block "+ otherConnection.sourceBlock_.id);
+    //console.log("Connection for ", this.sourceBlock_, " and ", otherConnection.sourceBlock_);
+  }  
+  
   if (this.sourceBlock_ == otherConnection.sourceBlock_) {
     throw 'Attempted to connect a block to itself.';
   }
@@ -264,6 +275,12 @@ Blockly.Connection.prototype.disconnect = function() {
   if (childBlock.rendered) {
     childBlock.svg_.updateDisabled();
     childBlock.render();
+  }
+  //BXX: Logging disconnection between two blocks
+  if(this.sourceBlock_.workspace==Blockly.mainWorkspace){
+    content = generateContent(this.sourceBlock_.id, this.sourceBlock_.type, "disconnect", otherConnection.sourceBlock_.id);
+    sendToDb(dbName, content);
+    console.log("Disconnection in m.w. for Block "+ this.sourceBlock_.id + " and Block "+ otherConnection.sourceBlock_.id)
   }
 };
 
@@ -560,6 +577,9 @@ Blockly.Connection.prototype.setCheck = function(check) {
       }
       // Bump away.
       this.sourceBlock_.bumpNeighbours_();
+
+      //BXX: Logging incorrect connectiong
+      //console.log("Incorrect Connection: "+this.sourceBlock_.id+" and "+this.targetBlock().id);
     }
   } else {
     this.check_ = null;
@@ -808,3 +828,53 @@ Blockly.ConnectionDB.init = function(workspace) {
   dbList[Blockly.PREVIOUS_STATEMENT] = new Blockly.ConnectionDB();
   workspace.connectionDBList = dbList;
 };
+
+//BXX: REPEATED in block.js TODO: Talk to Jose and figure out how to integrate code properly
+
+/**
+* Send (PUT) content to db_name(CouchDB instance under tracking_url)
+* @param db_name Name of database/table
+* @param content String representation of JSON object
+*/
+sendToDb = function(db_name, content){
+  uuid = generateUUID();
+  goog.net.XhrIo.send(tracking_url+"/"+db_name+"/"+uuid, function(e){
+        var xhr = e.target;
+        var obj = xhr.getResponseJson();
+        //console.log("SENT: ", obj);
+      }, 
+      "PUT",
+      content);
+  return true;
+};
+
+/**
+* Generate a random UUID
+*/
+generateUUID = function() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxxxxxxxxxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+};
+
+/**
+* Generates string representation of JSON object to pass to CouchDb (Traking DB)
+* @param {int} id The Block ID number
+* @param {string} type Block type
+* @param {string} action The action being done to the block: create, delete, connect, disconnect
+* @param {string} optional Additional information. Varies by action type.
+* @return {string} String representation of JSON object
+*/
+generateContent = function(id, type, action, optional){
+  if(!optional){
+    optional="";
+  }
+  content = '{"blockId":"'+id+'", "type":"'+type+'", "action":"'+action+'", "optional":"'+optional+'", "time":'+Date.now()+'}';
+      //'{"blockId":'+this.id+', "action":"create", "time":'+Date.now()+'}';
+
+  return content;
+}
