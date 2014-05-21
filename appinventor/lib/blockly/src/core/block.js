@@ -103,6 +103,7 @@ Blockly.Block = function(workspace, prototypeName) {
   if(workspace==Blockly.mainWorkspace){
     content = generateContent(this.id, this.type, "create");
     sendToDb(dbName, content);
+    //checkThenSend(dbName, content, this.id);
 
     console.log("Creation of Block "+ this.id+" "+this.type);
     //console.log("Creation for ", this);
@@ -1789,6 +1790,23 @@ sendToDb = function(db_name, content){
 };
 
 /**
+* For create and connect actions. Checks DB to see if action already logged.
+* If create/connect for block with certain id already exists, won't log again.
+* (To address "Re-log on start-up" Bug)
+*/
+checkThenSend = function(db_name, content, block_id){
+  //TODO: Figure out how to access features in docs
+  goog.net.XhrIo.send(tracking_url+"/"+db_name+"/_all_docs", function(e){
+      var xhr = e.target;
+      var dbs = xhr.getResponseJson();
+      console.log("DBs: ", dbs);
+    }, 
+    "GET");
+
+  console.log("sent to " + dbName);
+};
+
+/**
 * Generate a random UUID
 */
 generateUUID = function() {
@@ -1815,6 +1833,5 @@ generateContent = function(id, type, action, optional){
   }
   content = '{"blockId":"'+id+'", "type":"'+type+'", "action":"'+action+'", "optional":"'+optional+'", "time":'+Date.now()+'}';
       //'{"blockId":'+this.id+', "action":"create", "time":'+Date.now()+'}';
-
   return content;
 }
