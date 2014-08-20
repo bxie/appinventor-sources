@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
@@ -45,6 +47,8 @@ public final class FileImporterImpl implements FileImporter {
 
   // Maximum size of an uploaded asset, in megabytes.
   private static final Flag<Float> maxAssetSizeMegs = Flag.createFlag("max.asset.size.megs", 9f);
+
+  private static final Logger LOG = Logger.getLogger(FileImporterImpl.class.getName());
 
   private final StorageIo storageIo = StorageIoInstanceHolder.INSTANCE;
 
@@ -85,6 +89,7 @@ public final class FileImporterImpl implements FileImporter {
           }
         } catch (ZipException e) {
           // The uploaded file is not a valid zip file
+          LOG.log(Level.SEVERE, "Invalid Project Archive Format", e);
           throw new FileImporterException(UploadResponse.Status.NOT_PROJECT_ARCHIVE);
         }
 
@@ -145,9 +150,7 @@ public final class FileImporterImpl implements FileImporter {
     }
     String settings = YoungAndroidProjectService.getProjectSettings(null, null, null, null);
     long projectId = storageIo.createProject(userId, project, settings);
-    return new UserProject(projectId, storageIo.getProjectName(userId, projectId),
-        storageIo.getProjectType(userId, projectId),
-        storageIo.getProjectDateCreated(userId, projectId));
+    return storageIo.getUserProject(userId, projectId);
   }
 
   @VisibleForTesting
@@ -183,7 +186,7 @@ public final class FileImporterImpl implements FileImporter {
     if (!sourceFiles.contains(fileName)) {
       storageIo.addSourceFilesToProject(userId, projectId, false, fileName);
     }
-    return storageIo.uploadRawFile(projectId, fileName, userId, content);
+    return storageIo.uploadRawFileForce(projectId, fileName, userId, content);
   }
 
   @Override

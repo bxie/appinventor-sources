@@ -1,6 +1,6 @@
 // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2009-2011 Google, All Rights reserved
-// Copyright 2011-2012 MIT, All rights reserved
+// Copyright 2011-2014 MIT, All rights reserved
 // Released under the MIT License https://raw.github.com/mit-cml/app-inventor/master/mitlicense.txt
 
 package com.google.appinventor.components.runtime;
@@ -409,28 +409,43 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
         // It's possible that the behavior could change in the future if they "fix" that bug.
         // Try Bitmap.createScaledBitmap, but if it gives us an immutable bitmap, we'll have to
         // create a mutable bitmap and scale the old bitmap using Canvas.drawBitmap.
-        Bitmap scaledBitmap = Bitmap.createScaledBitmap(oldBitmap, w, h, false);
-        if (scaledBitmap.isMutable()) {
-          // scaledBitmap is mutable; we can use it in a canvas.
-          bitmap = scaledBitmap;
-          // NOTE(lizlooney) - I tried just doing canvas.setBitmap(bitmap), but after that the
-          // canvas.drawCircle() method did not work correctly. So, we need to create a whole new
-          // canvas.
-          canvas = new android.graphics.Canvas(bitmap);
+        try {
+          // See comment at the catch below
+          Bitmap scaledBitmap = Bitmap.createScaledBitmap(oldBitmap, w, h, false);
 
-        } else {
-          // scaledBitmap is immutable; we can't use it in a canvas.
+          if (scaledBitmap.isMutable()) {
+            // scaledBitmap is mutable; we can use it in a canvas.
+            bitmap = scaledBitmap;
+            // NOTE(lizlooney) - I tried just doing canvas.setBitmap(bitmap), but after that the
+            // canvas.drawCircle() method did not work correctly. So, we need to create a whole new
+            // canvas.
+            canvas = new android.graphics.Canvas(bitmap);
 
-          bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-          // NOTE(lizlooney) - I tried just doing canvas.setBitmap(bitmap), but after that the
-          // canvas.drawCircle() method did not work correctly. So, we need to create a whole new
-          // canvas.
-          canvas = new android.graphics.Canvas(bitmap);
+          } else {
+            // scaledBitmap is immutable; we can't use it in a canvas.
 
-          // Draw the old bitmap into the new canvas, scaling as necessary.
-          Rect src = new Rect(0, 0, oldBitmapWidth, oldBitmapHeight);
-          RectF dst = new RectF(0, 0, w, h);
-          canvas.drawBitmap(oldBitmap, src, dst, null);
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            // NOTE(lizlooney) - I tried just doing canvas.setBitmap(bitmap), but after that the
+            // canvas.drawCircle() method did not work correctly. So, we need to create a whole new
+            // canvas.
+            canvas = new android.graphics.Canvas(bitmap);
+
+            // Draw the old bitmap into the new canvas, scaling as necessary.
+            Rect src = new Rect(0, 0, oldBitmapWidth, oldBitmapHeight);
+            RectF dst = new RectF(0, 0, w, h);
+            canvas.drawBitmap(oldBitmap, src, dst, null);
+          }
+
+        } catch (IllegalArgumentException ioe) {
+          // There's some kind of order of events issue that results in w or h being zero.
+          // I'm guessing that this is a result of specifying width or height as FILL_PARRENT on an
+          // opening screen.   In any case, w<=0 or h<=0 causes the call to createScaledBitmap
+          // to throw an illegal argument.  If this happens we simply don't draw the bitmap
+          // (which would be of width or height 0)
+          // TODO(hal): Investigate this further to see what is causes the w=0 or h=0 and see if
+          // there is a more high-level fix.
+
+          Log.e(LOG_TAG, "Bad values to createScaledBimap w = " + w + ", h = " + h);
         }
 
         // The following has nothing to do with the scaling in this method.
@@ -716,7 +731,7 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
    * Updates the sorted set of Sprites and the screen when a Sprite's Z
    * property is changed.
    *
-   * @param Sprite the Sprite whose Z property has changed
+   * @param sprite the Sprite whose Z property has changed
    */
   void changeSpriteLayer(Sprite sprite) {
     removeSprite(sprite);
@@ -815,7 +830,7 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
 
  /**
   * Set the canvas width
-  * The width cannot be set to less than 1
+  * The width can only be set to >0 or -1 (automatic) or -2 (fill parent).
   *
   * @param width
   */
@@ -823,14 +838,18 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
   @SimpleProperty
   // the bitmap routines will crash if the width is set to 0
   public void Width(int width) {
-    if (width >= MIN_WIDTH_HEIGHT) {
-        super.Width(width);
+    if ((width > 0) || (width==LENGTH_FILL_PARENT) || (width==LENGTH_PREFERRED)) {
+       super.Width(width);
+    }
+    else {
+       container.$form().dispatchErrorOccurredEvent(this, "Width",
+            ErrorMessages.ERROR_CANVAS_WIDTH_ERROR);
     }
   }
 
   /**
    * Set the canvas height
-  *  The height cannot be set to less than 1
+   * The height can only be set to >0 or -1 (automatic) or -2 (fill parent)
    *
    * @param height
    */
@@ -838,9 +857,13 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
   @SimpleProperty
   // the bitmap routines will crash if the height is set to 0
    public void Height(int height) {
-     if (height >= MIN_WIDTH_HEIGHT) {
+     if ((height > 0) || (height==LENGTH_FILL_PARENT) || (height==LENGTH_PREFERRED)) {
        super.Height(height);
      }
+     else {
+       container.$form().dispatchErrorOccurredEvent(this, "Height",
+            ErrorMessages.ERROR_CANVAS_HEIGHT_ERROR);
+    }
    }
 
 
@@ -978,7 +1001,7 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
       defaultValue = DEFAULT_LINE_WIDTH + "")
   @SimpleProperty
   public void LineWidth(float width) {
-    paint.setStrokeWidth(width);
+    paint.setStrokeWidth((context.getResources().getDisplayMetrics().density * width) + 0.5f);
   }
 
   /**
@@ -1152,7 +1175,8 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
    */
   @SimpleFunction
   public void DrawCircle(int x, int y, float r) {
-    view.canvas.drawCircle(x, y, r, paint);
+    float densityRadius = (context.getResources().getDisplayMetrics().density * r) + 0.5f;
+    view.canvas.drawCircle(x, y, densityRadius, paint);
     view.invalidate();
   }
 
@@ -1379,3 +1403,4 @@ public final class Canvas extends AndroidViewComponent implements ComponentConta
     }
   }
 }
+

@@ -46,15 +46,15 @@ public class YoungAndroidLengthPropertyEditor extends AdditionalChoicePropertyEd
     fillParentRadioButton = new RadioButton(radioButtonGroup, MESSAGES.fillParentCaption());
     customLengthRadioButton = new RadioButton(radioButtonGroup);
     customLengthField = new TextBox();
-    customLengthField.setVisibleLength(3);
-    customLengthField.setMaxLength(3);
+    customLengthField.setVisibleLength(4);
+    customLengthField.setMaxLength(4);
 
     Panel customRow = new HorizontalPanel();
     customRow.add(customLengthRadioButton);
     customRow.add(customLengthField);
-    Label pixels = new Label(MESSAGES.pixelsCaption());
-    pixels.setStylePrimaryName("ode-PixelsLabel");
-    customRow.add(pixels);
+    Label dps = new Label(MESSAGES.dpsCaption());
+    dps.setStylePrimaryName("ode-DPsLabel");
+    customRow.add(dps);
 
     Panel panel = new VerticalPanel();
     panel.add(automaticRadioButton);
@@ -112,7 +112,7 @@ public class YoungAndroidLengthPropertyEditor extends AdditionalChoicePropertyEd
     } else if (lengthHint.equals(CONST_FILL_PARENT)) {
       return MESSAGES.fillParentCaption();
     } else {
-      return MESSAGES.pixelsSummary(lengthHint);
+      return MESSAGES.dpsSummary(lengthHint);
     }
   }
 

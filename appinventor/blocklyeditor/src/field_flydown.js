@@ -1,29 +1,15 @@
+// -*- mode: java; c-basic-offset: 2; -*-
+// Copyright 2013-2014 MIT, All rights reserved
+// Released under the MIT License https://raw.github.com/mit-cml/app-inventor/master/mitlicense.txt
 /**
- * Visual Blocks Editor
- *
- * Copyright 2012 Google Inc.
- * http://blockly.googlecode.com/
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
+ * @license
  * @fileoverview Field in which mouseover displays flyout-like menu of blocks
  * and mouse click edits the field name.
  * Flydowns are used in App Inventor for displaying get/set blocks for parameter names
  * and callers for procedure declarations.
  * @author fturbak@wellesley.edu (Lyn Turbak)
  */
+
 'use strict';
 
 goog.provide('Blockly.FieldFlydown');
@@ -176,7 +162,9 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
   flydown.setCSSClass(this.flyoutCSSClassName); // This could have been changed by another field.
   var blocksXMLText = this.flydownBlocksXML_()
   var blocksDom = Blockly.Xml.textToDom(blocksXMLText);
-  var blocksXMLList = blocksDom.children; // List of blocks for flydown
+  // [lyn, 11/10/13] Use goog.dom.getChildren rather than .children or .childNodes
+  //   to make this code work across browsers.
+  var blocksXMLList = goog.dom.getChildren(blocksDom); // List of blocks for flydown
   var xy = Blockly.getSvgXY_(this.borderRect_);
   var borderBBox = this.borderRect_.getBBox();
   var x = xy.x;

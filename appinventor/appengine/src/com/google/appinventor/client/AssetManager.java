@@ -13,6 +13,7 @@ import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidAssetN
 import com.google.appinventor.shared.rpc.project.youngandroid.YoungAndroidAssetsFolder;
 import com.google.appinventor.shared.rpc.project.ProjectNode;
 import com.google.appinventor.shared.rpc.project.ProjectServiceAsync;
+import com.google.appinventor.shared.util.Base64Util;
 import com.google.appinventor.client.output.OdeLog;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -67,7 +68,7 @@ public final class AssetManager implements ProjectChangeListener {
       project.addProjectChangeListener(this);
       assets = new HashMap<String,AssetInfo>();
       for (ProjectNode node : assetsFolder.getChildren()) {
-        readIn(node);
+        assetSetup(node);
       }
     } else {
       project = null;
@@ -76,21 +77,24 @@ public final class AssetManager implements ProjectChangeListener {
     }
   }
 
-  private void readIn(ProjectNode node) {
-    final String fileId = node.getFileId();
-    Ode.getInstance().getProjectService().loadraw(projectId, fileId,
-      new AsyncCallback<byte[]>() {
-        @Override
-          public void onSuccess(byte [] data) {
-          AssetInfo assetInfo = new AssetInfo();
-          assetInfo.fileId = fileId;
-          assetInfo.fileContent = data;
-          assetInfo.loaded = false; // Set to true when it is loaded to the repl
-          assets.put(fileId, assetInfo);
-          if (DEBUG)
-            OdeLog.log("Adding asset fileId = " + fileId);
-        }
+  private void assetSetup(ProjectNode node) {
+    String fileId = node.getFileId();
+    AssetInfo assetInfo = new AssetInfo();
+    assetInfo.fileId = fileId;
+    assetInfo.fileContent = null;
+    assetInfo.loaded = false; // Set to true when it is loaded to the repl
+    assets.put(fileId, assetInfo);
+  }
 
+  private void readIn(final AssetInfo assetInfo, final String formName) {
+    Ode.getInstance().getProjectService().loadraw2(projectId, assetInfo.fileId,
+      new AsyncCallback<String>() {
+        @Override
+          public void onSuccess(String data) {
+          assetInfo.fileContent = Base64Util.decodeLines(data);
+          assetInfo.loaded = false; // Set to true when it is loaded to the repl
+          refreshAssets1(formName);
+        }
         @Override
           public void onFailure(Throwable ex) {
           OdeLog.elog("Failed to load asset.");
@@ -103,9 +107,16 @@ public final class AssetManager implements ProjectChangeListener {
       OdeLog.log("AssetManager: formName = " + formName);
     for (AssetInfo a : assets.values()) {
       if (!a.loaded) {
-        boolean didit = doPutAsset(formName, a.fileId, a.fileContent);
-        if (didit)
-          a.loaded = true;
+        if (a.fileContent == null) { // Need to fetch it from the server
+          readIn(a, formName);       // Read it in asynchronously
+          break;                     // we'll resume when we have it
+        } else {
+          boolean didit = doPutAsset(formName, a.fileId, a.fileContent);
+          if (didit) {
+            a.loaded = true;
+            a.fileContent = null; // Save memory
+          }
+        }
       }
     }
   }
@@ -114,6 +125,19 @@ public final class AssetManager implements ProjectChangeListener {
     if (INSTANCE == null)
       return;
     INSTANCE.refreshAssets1(formName);
+  }
+
+  public static void reset(String formName) {
+    if (INSTANCE == null)
+      return;
+    INSTANCE.reset1(formName);
+  }
+
+  public void reset1(String formName) {
+    OdeLog.log("AssetManager: formName = " + formName + " received reset.");
+    for (AssetInfo a: assets.values()) {
+      a.loaded = false;
+    }
   }
 
   @Override
@@ -146,10 +170,12 @@ public final class AssetManager implements ProjectChangeListener {
   private static native void exportMethodsToJavascript() /*-{
     $wnd.AssetManager_refreshAssets =
       $entry(@com.google.appinventor.client.AssetManager::refreshAssets(Ljava/lang/String;));
+    $wnd.AssetManager_reset =
+      $entry(@com.google.appinventor.client.AssetManager::reset(Ljava/lang/String;));
   }-*/;
 
   private static native boolean doPutAsset(String formName, String filename, byte[] content) /*-{
     return $wnd.Blocklies[formName].ReplMgr.putAsset(filename, content);
-    }-*/;
+  }-*/;
 
 }

@@ -1,7 +1,10 @@
-// -*- mode: java; c-basic-offset: 2; -*-
+ // -*- mode: java; c-basic-offset: 2; -*-
 // Copyright 2009-2011 Google, All Rights reserved
 // Copyright 2011-2012 MIT, All rights reserved
 // Released under the MIT License https://raw.github.com/mit-cml/app-inventor/master/mitlicense.txt
+
+// ***********************************************
+// If we're not going to go this route with onDestroy, then at least get rid of the DEBUG flag.
 
 package com.google.appinventor.components.runtime;
 
@@ -16,22 +19,22 @@ import java.util.Set;
 import org.json.JSONException;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ScrollView;
 
@@ -40,7 +43,6 @@ import com.google.appinventor.components.annotations.DesignerProperty;
 import com.google.appinventor.components.annotations.PropertyCategory;
 import com.google.appinventor.components.annotations.SimpleEvent;
 import com.google.appinventor.components.annotations.SimpleObject;
-import com.google.appinventor.components.annotations.SimpleFunction;
 import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.annotations.UsesPermissions;
 import com.google.appinventor.components.common.ComponentCategory;
@@ -79,9 +81,6 @@ public class Form extends Activity
     implements Component, ComponentContainer, HandlesEventDispatching {
   private static final String LOG_TAG = "Form";
 
-  // *** set this back to false after review
-  private static final boolean DEBUG = true;
-
   private static final String RESULT_NAME = "APP_INVENTOR_RESULT";
 
   private static final String ARGUMENT_NAME = "APP_INVENTOR_START";
@@ -95,14 +94,14 @@ public class Form extends Activity
   // activity: if a Clock component's TimerAlwaysFires property is true, the Clock component's
   // Timer event will still fire, even when the activity is no longer in the foreground. For this
   // reason, we cannot assume that the activeForm is the foreground activity.
-  private static Form activeForm;
+  protected static Form activeForm;
 
   // applicationIsBeingClosed is set to true during closeApplication.
   private static boolean applicationIsBeingClosed;
 
   private final Handler androidUIHandler = new Handler();
 
-  private String formName;
+  protected String formName;
 
   private boolean screenInitialized;
 
@@ -111,6 +110,10 @@ public class Form extends Activity
 
   // Backing for background color
   private int backgroundColor;
+
+  // Information string the app creator can set.  It will be shown when
+  // "about this application" menu item is selected.
+  private String aboutScreen;
 
   private String backgroundImagePath = "";
   private Drawable backgroundDrawable;
@@ -139,12 +142,13 @@ public class Form extends Activity
   private final Set<OnResumeListener> onResumeListeners = Sets.newHashSet();
   private final Set<OnPauseListener> onPauseListeners = Sets.newHashSet();
   private final Set<OnDestroyListener> onDestroyListeners = Sets.newHashSet();
-  
+
   // AppInventor lifecycle: listeners for the Initialize Event
   private final Set<OnInitializeListener> onInitializeListeners = Sets.newHashSet();
 
   // Set to the optional String-valued Extra passed in via an Intent on startup.
-  private String startupValue = "";
+  // This is passed directly in the Repl.
+  protected String startupValue = "";
 
   // To control volume of error complaints
   private static long minimumToastWait = 10000000000L; // 10 seconds
@@ -184,6 +188,13 @@ public class Form extends Activity
 
     fullScreenVideoUtil = new FullScreenVideoUtil(this, androidUIHandler);
 
+    // Set soft keyboard to not cover the focused UI element, e.g., when you are typing
+    // into a textbox near the bottom of the screen.
+    WindowManager.LayoutParams params = getWindow().getAttributes();
+    int softInputMode = params.softInputMode;
+    getWindow().setSoftInputMode(
+        softInputMode | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
     // Add application components to the form
     $define();
 
@@ -196,8 +207,9 @@ public class Form extends Activity
   }
 
   private void defaultPropertyValues() {
-    Scrollable(true); // frameLayout is created in Scrollable()
+    Scrollable(false); // frameLayout is created in Scrollable()
     BackgroundImage("");
+    AboutScreen("");
     BackgroundColor(Component.COLOR_WHITE);
     AlignHorizontal(ComponentConstants.GRAVITY_LEFT);
     AlignVertical(ComponentConstants.GRAVITY_TOP);
@@ -248,14 +260,14 @@ public class Form extends Activity
    */
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
-    if (keyCode == KeyEvent.KEYCODE_BACK) {      
+    if (keyCode == KeyEvent.KEYCODE_BACK) {
       if (!BackPressed()) {
         boolean handled = super.onKeyDown(keyCode, event);
         AnimationUtil.ApplyCloseScreenAnimation(this, closeAnimType);
         return handled;
       } else {
         return true;
-      }      
+      }
     }
     return super.onKeyDown(keyCode, event);
   }
@@ -264,7 +276,7 @@ public class Form extends Activity
   public boolean BackPressed() {
     return EventDispatcher.dispatchEvent(this, "BackPressed");
   }
-  
+
   // onActivityResult should be triggered in only two cases:
   // (1) The result is for some other component in the app, not this Form itself
   // (2) This page started another page, and that page is closing, and passing
@@ -300,15 +312,11 @@ public class Form extends Activity
   // functionName is a string to include in the error message that will be shown
   // if the JSON decoding fails
   private  static Object decodeJSONStringForForm(String jsonString, String functionName) {
-    if (DEBUG) {
-      Log.i(LOG_TAG, "decodeJSONStringForForm -- decoding JSON representation:" + jsonString);
-    }
+    Log.i(LOG_TAG, "decodeJSONStringForForm -- decoding JSON representation:" + jsonString);
     Object valueFromJSON = "";
     try {
       valueFromJSON = JsonUtil.getObjectFromJson(jsonString);
-      if (DEBUG) {
-        Log.i(LOG_TAG, "decodeJSONStringForForm -- got decoded JSON:" + valueFromJSON.toString());
-      }
+      Log.i(LOG_TAG, "decodeJSONStringForForm -- got decoded JSON:" + valueFromJSON.toString());
     } catch (JSONException e) {
       activeForm.dispatchErrorOccurredEvent(activeForm, functionName,
           // showing the start value here will produce an ugly error on the phone, but it's
@@ -361,11 +369,11 @@ public class Form extends Activity
   public void registerForOnResume(OnResumeListener component) {
     onResumeListeners.add(component);
   }
-  
+
   /**
    * An app can register to be notified when App Inventor's Initialize
    * block has fired.  They will be called in Initialize().
-   * 
+   *
    * @param component
    */
   public void registerForOnInitialize(OnInitializeListener component) {
@@ -503,12 +511,14 @@ public class Form extends Activity
         if (frameLayout != null && frameLayout.getWidth() != 0 && frameLayout.getHeight() != 0) {
           EventDispatcher.dispatchEvent(Form.this, "Initialize");
           screenInitialized = true;
-          
+
           //  Call all apps registered to be notified when Initialize Event is dispatched
           for (OnInitializeListener onInitializeListener : onInitializeListeners) {
             onInitializeListener.onInitialize();
           }
-          
+          if (activeForm instanceof ReplForm) { // We are the Companion
+            ((ReplForm)activeForm).HandleReturnValues();
+          }
         } else {
           // Try again later.
           androidUIHandler.post(this);
@@ -565,7 +575,11 @@ public class Form extends Activity
    *
    * @return  true if the screen is vertically scrollable
    */
-  @SimpleProperty(category = PropertyCategory.APPEARANCE)
+  @SimpleProperty(category = PropertyCategory.APPEARANCE,
+    description = "When checked, there will be a vertical scrollbar on the "
+    + "screen, and the height of the application can exceed the physical "
+    + "height of the device. When unchecked, the application height is "
+    + "constrained to the height of the device.")
   public boolean Scrollable() {
     return scrollable;
   }
@@ -576,7 +590,7 @@ public class Form extends Activity
    * @param scrollable  true if the screen should be vertically scrollable
    */
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_BOOLEAN,
-      defaultValue = "True")
+    defaultValue = "False")
   @SimpleProperty
   public void Scrollable(boolean scrollable) {
     if (this.scrollable == scrollable && frameLayout != null) {
@@ -592,8 +606,8 @@ public class Form extends Activity
 
     frameLayout = scrollable ? new ScrollView(this) : new FrameLayout(this);
     frameLayout.addView(viewLayout.getLayoutManager(), new ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.FILL_PARENT,
-        ViewGroup.LayoutParams.FILL_PARENT));
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT));
 
     frameLayout.setBackgroundColor(backgroundColor);
     if (backgroundDrawable != null) {
@@ -680,7 +694,8 @@ public class Form extends Activity
    *
    * @return  form caption
    */
-  @SimpleProperty(category = PropertyCategory.APPEARANCE)
+  @SimpleProperty(category = PropertyCategory.APPEARANCE,
+      description = "The caption for the form, which apears in the title bar")
   public String Title() {
     return getTitle().toString();
   }
@@ -698,12 +713,39 @@ public class Form extends Activity
     setTitle(title);
   }
 
+
+  /**
+   * AboutScreen property getter method.
+   *
+   * @return  AboutScreen string
+   */
+  @SimpleProperty(category = PropertyCategory.APPEARANCE,
+      description = "Information about the screen.  It appears when \"About this Application\" "
+      + "is selected from the system menu. Use it to inform people about your app.  In multiple "
+      + "screen apps, each screen has its own AboutScreen info.")
+  public String AboutScreen() {
+    return aboutScreen;
+  }
+
+  /**
+   * AboutScreen property setter method: sets a new aboutApp string for the form in the
+   * form's "About this application" menu.
+   *
+   * @param title  new form caption
+   */
+  @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_TEXTAREA,
+      defaultValue = "")
+  @SimpleProperty
+  public void AboutScreen(String aboutScreen) {
+    this.aboutScreen = aboutScreen;
+  }
+
   /**
    * The requested screen orientation. Commonly used values are
       unspecified (-1), landscape (0), portrait (1), sensor (4), and user (2).  " +
-      "See the Android developer documentation for ActivityInfo.Screen_Orientation for the " + 
+      "See the Android developer documentation for ActivityInfo.Screen_Orientation for the " +
       "complete list of possible settings.
-   * 
+   *
    * ScreenOrientation property getter method.
    *
    * @return  screen orientation
@@ -711,7 +753,7 @@ public class Form extends Activity
   @SimpleProperty(category = PropertyCategory.APPEARANCE,
       description = "The requested screen orientation. Commonly used values are" +
       " unspecified (-1), landscape (0), portrait (1), sensor (4), and user (2).  " +
-      "See the Android developer docuemntation for ActivityInfo.Screen_Orientation for the " + 
+      "See the Android developer docuemntation for ActivityInfo.Screen_Orientation for the " +
       "complete list of possible settings.")
   public String ScreenOrientation() {
     switch (getRequestedOrientation()) {
@@ -955,8 +997,10 @@ public class Form extends Activity
    * @param vCode the version name of the application
    */
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_NON_NEGATIVE_INTEGER,
-      defaultValue = "1")
-  @SimpleProperty(userVisible = false)
+    defaultValue = "1")
+  @SimpleProperty(userVisible = false,
+    description = "An integer value which must be incremented each time a new Android "
+    +  "Application Package File (APK) is created for the Google Play Store.")
   public void VersionCode(int vCode) {
     // We don't actually need to do anything.
   }
@@ -967,8 +1011,10 @@ public class Form extends Activity
    * @param vName the version name of the application
    */
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_STRING,
-      defaultValue = "1.0")
-  @SimpleProperty(userVisible = false)
+    defaultValue = "1.0")
+  @SimpleProperty(userVisible = false,
+    description = "A string which can be changed to allow Google Play "
+    + "Store users to distinguish between different versions of the App.")
   public void VersionName(String vName) {
     // We don't actually need to do anything.
   }
@@ -978,7 +1024,8 @@ public class Form extends Activity
    *
    * @return  width property used by the layout
    */
-  @SimpleProperty(category = PropertyCategory.APPEARANCE)
+  @SimpleProperty(category = PropertyCategory.APPEARANCE,
+    description = "Screen width (x-size).")
   public int Width() {
     return frameLayout.getWidth();
   }
@@ -988,7 +1035,8 @@ public class Form extends Activity
    *
    * @return  height property used by the layout
    */
-  @SimpleProperty(category = PropertyCategory.APPEARANCE)
+  @SimpleProperty(category = PropertyCategory.APPEARANCE,
+    description = "Screen height (y-size).")
   public int Height() {
     return frameLayout.getHeight();
   }
@@ -1058,17 +1106,13 @@ public class Form extends Activity
 
   // functionName is used for including in the error message to be shown
   // if the JSON encoding fails
-  private static String jsonEncodeForForm(Object value, String functionName) {
+  protected static String jsonEncodeForForm(Object value, String functionName) {
     String jsonResult = "";
-    if (DEBUG) {
-      Log.i(LOG_TAG, "jsonEncodeForForm -- creating JSON representation:" + value.toString());
-    }
+    Log.i(LOG_TAG, "jsonEncodeForForm -- creating JSON representation:" + value.toString());
     try {
       // TODO(hal): check that this is OK for raw strings
       jsonResult = JsonUtil.getJsonRepresentation(value);
-      if (DEBUG) {
-        Log.i(LOG_TAG, "jsonEncodeForForm -- got JSON representation:" + jsonResult);
-      }
+      Log.i(LOG_TAG, "jsonEncodeForForm -- got JSON representation:" + jsonResult);
     } catch (JSONException e) {
       activeForm.dispatchErrorOccurredEvent(activeForm, functionName,
           // showing the bad value here will produce an ugly error on the phone, but it's
@@ -1081,10 +1125,8 @@ public class Form extends Activity
   @SimpleEvent(description = "Event raised when another screen has closed and control has " +
       "returned to this screen.")
   public void OtherScreenClosed(String otherScreenName, Object result) {
-    if (DEBUG) {
-      Log.i(LOG_TAG, "Form " + formName + " OtherScreenClosed, otherScreenName = " +
-          otherScreenName + ", result = " + result.toString());
-    }
+    Log.i(LOG_TAG, "Form " + formName + " OtherScreenClosed, otherScreenName = " +
+        otherScreenName + ", result = " + result.toString());
     EventDispatcher.dispatchEvent(this, "OtherScreenClosed", otherScreenName, result);
   }
 
@@ -1184,10 +1226,15 @@ public class Form extends Activity
   // This is called from runtime.scm when a "close screen with value" block is executed.
   public static void finishActivityWithResult(Object result) {
     if (activeForm != null) {
-      String jString = jsonEncodeForForm(result, "close screen with value");
-      Intent resultIntent = new Intent();
-      resultIntent.putExtra(RESULT_NAME, jString);
-      activeForm.closeForm(resultIntent);
+      if (activeForm instanceof ReplForm) {
+        ((ReplForm)activeForm).setResult(result);
+        activeForm.closeForm(null);        // This will call RetValManager.popScreen()
+      } else {
+        String jString = jsonEncodeForForm(result, "close screen with value");
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(RESULT_NAME, jString);
+        activeForm.closeForm(resultIntent);
+      }
     } else {
       throw new IllegalStateException("activeForm is null");
     }
@@ -1250,7 +1297,8 @@ public class Form extends Activity
     }
   }
 
-  // Configure the system menu to include a button to kill the application
+  // Configure the system menu to include items to kill the application and to show "about"
+  // information
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -1260,6 +1308,7 @@ public class Form extends Activity
     // add the menu items
     // Comment out the next line if we don't want the exit button
     addExitButtonToMenu(menu);
+    addAboutInfoToMenu(menu);
     return true;
   }
 
@@ -1272,30 +1321,56 @@ public class Form extends Activity
         return true;
       }
     });
-    stopApplicationItem.setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+    stopApplicationItem.setIcon(android.R.drawable.ic_notification_clear_all);
+  }
+
+  public void addAboutInfoToMenu(Menu menu) {
+    MenuItem aboutAppItem = menu.add(Menu.NONE, Menu.NONE, 2,
+    "About this application")
+    .setOnMenuItemClickListener(new OnMenuItemClickListener() {
+      public boolean onMenuItemClick(MenuItem item) {
+        showAboutApplicationNotification();
+        return true;
+      }
+    });
+    aboutAppItem.setIcon(android.R.drawable.sym_def_app_icon);
   }
 
   private void showExitApplicationNotification() {
-    AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-    alertDialog.setTitle("Stop application?");
-    // prevents the user from escaping the dialog by hitting the Back button
-    alertDialog.setCancelable(false);
-    alertDialog.setMessage("Stop this application and exit? You'll need to relaunch " +
-    "the application to use it again.");
-    alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Stop and exit",
-        new DialogInterface.OnClickListener() {
-      public void onClick(DialogInterface dialog, int which) {
-        // We call closeApplication here, not finishApplication which is a static method and
-        // assumes that activeForm is the foreground activity.
-        closeApplicationFromMenu();
-      }});
-    alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Don't stop",
-        new DialogInterface.OnClickListener() {
-      public void onClick(DialogInterface dialog, int which) {
-        // nothing to do here
-      }
-    });
-    alertDialog.show();
+    String title = "Stop application?";
+    String message = "Stop this application and exit? You'll need to relaunch " +
+        "the application to use it again.";
+    String positiveButton = "Stop and exit";
+    String negativeButton = "Don't stop";
+    // These runnables are passed to twoButtonAlert.  They perform the corresponding actions
+    // when the button is pressed.   Here there's nothing to do for "don't stop" and cancel
+    Runnable stopApplication = new Runnable() {public void run () {closeApplicationFromMenu();}};
+    Runnable doNothing = new Runnable () {public void run() {}};
+    Notifier.twoButtonDialog(
+        this,
+        message,
+        title,
+        positiveButton,
+        negativeButton,
+        false, // cancelable is false
+        stopApplication,
+        doNothing,
+        doNothing);
+  }
+
+  private String yandexTranslateTagline = "";
+
+  void setYandexTranslateTagline(){
+    yandexTranslateTagline = "<p><small>Powered by Yandex.Translate</small></p>";
+  }
+
+  private void showAboutApplicationNotification() {
+    String title = "About This App";
+    String tagline = "<p><small><em>Invented with MIT App Inventor<br>appinventor.mit.edu</em></small>";
+    aboutScreen = aboutScreen.replaceAll("\\n", "<br>"); // Allow for line breaks in the string.
+    String message = aboutScreen + tagline + yandexTranslateTagline;
+    String buttonText ="Got it";
+    Notifier.oneButtonAlert(this, message, title, buttonText);
   }
 
   // This is called from clear-current-form in runtime.scm.

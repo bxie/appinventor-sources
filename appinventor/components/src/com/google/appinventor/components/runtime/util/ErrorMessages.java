@@ -90,6 +90,8 @@ public final class ErrorMessages {
   public static final int ERROR_MEDIA_IMAGE_FILE_FORMAT = 706;
   public static final int ERROR_MEDIA_CANNOT_OPEN = 707;
   public static final int ERROR_MEDIA_FILE_ERROR = 708;
+  public static final int ERROR_UNABLE_TO_FOCUS_MEDIA = 709;
+  public static final int ERROR_SOUND_NOT_READY = 710;
   // SoundRecorder errors
   public static final int ERROR_SOUND_RECORDER = 801;
   public static final int ERROR_SOUND_RECORDER_CANNOT_CREATE = 802;
@@ -101,6 +103,8 @@ public final class ErrorMessages {
   public static final int ERROR_SCREEN_INVALID_ANIMATION = 905;
   // Canvas errors
   public static final int ERROR_CANVAS_BITMAP_ERROR = 1001;
+  public static final int ERROR_CANVAS_WIDTH_ERROR = 1002;
+  public static final int ERROR_CANVAS_HEIGHT_ERROR = 1003;
   // Web errors
   public static final int ERROR_WEB_UNABLE_TO_GET = 1101;
   public static final int ERROR_WEB_UNSUPPORTED_ENCODING = 1102;
@@ -137,8 +141,34 @@ public final class ErrorMessages {
 
   // Repl Communication Errors
   public static final int ERROR_REPL_SECURITY_ERROR = 1801;
+  //AccelerometerSensor Errors
+  public static final int ERROR_BAD_VALUE_FOR_ACCELEROMETER_SENSITIVITY = 1901;
 
-  // Please start the next group of error numbers at 1901.
+  //Sharing Errors
+  public static final int ERROR_FILE_NOT_FOUND_FOR_SHARING = 2001;
+
+  // File errors
+  public static final int ERROR_CANNOT_FIND_FILE = 2101;
+  public static final int ERROR_CANNOT_READ_FILE = 2102;
+  public static final int ERROR_CANNOT_CREATE_FILE = 2103;
+  public static final int ERROR_CANNOT_WRITE_TO_FILE = 2104;
+  public static final int ERROR_CANNOT_DELETE_ASSET = 2105;
+  public static final int ERROR_CANNOT_WRITE_ASSET = 2106;
+
+  // Yandex.Translate errors
+  public static final int ERROR_TRANSLATE_NO_KEY_FOUND = 2201;
+  public static final int ERROR_TRANSLATE_SERVICE_NOT_AVAILABLE = 2202;
+  public static final int ERROR_TRANSLATE_JSON_RESPONSE = 2203;
+
+  // TimePicker errors
+  public static final int ERROR_ILLEGAL_HOUR = 2301;
+  public static final int ERROR_ILLEGAL_MINUTE = 2302;
+
+  // DatePicker errors
+  public static final int ERROR_ILLEGAL_DATE = 2401;
+
+  // Please start the next group of error numbers at 2501.
+
 
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;
@@ -293,6 +323,9 @@ public final class ErrorMessages {
     errorMessages.put(ERROR_MEDIA_CANNOT_OPEN,
         "Cannot open file %s.");
     errorMessages.put(ERROR_MEDIA_FILE_ERROR, "Got file error: %s.");
+    errorMessages.put(ERROR_UNABLE_TO_FOCUS_MEDIA,
+        "Unable to grant exclusive lock of audio output stream to %s.");
+    errorMessages.put(ERROR_SOUND_NOT_READY, "The sound is not ready to play: %s.");
      // SoundRecorder errors
     errorMessages.put(ERROR_SOUND_RECORDER, "An unexpected error occurred while recording sound.");
     errorMessages.put(ERROR_SOUND_RECORDER_CANNOT_CREATE, "Cannot start recording: %s");
@@ -308,6 +341,8 @@ public final class ErrorMessages {
         "Bad value for screen open/close animation: %s");
     // Canvas errors
     errorMessages.put(ERROR_CANVAS_BITMAP_ERROR, "Error getting Canvas contents to save");
+    errorMessages.put(ERROR_CANVAS_WIDTH_ERROR, "Canvas width cannot be set to non-positive number");
+    errorMessages.put(ERROR_CANVAS_HEIGHT_ERROR, "Canvas height cannot be set to non-positive number");
     // Web errors
     errorMessages.put(ERROR_WEB_UNABLE_TO_GET,
         "Unable to get a response with the specified URL: %s");
@@ -366,6 +401,32 @@ public final class ErrorMessages {
       "Text Receiving should be either 1, 2 or 3.");
     errorMessages.put(ERROR_REPL_SECURITY_ERROR,
       "Security Error Receiving Blocks from Browser.");
+    //AccelerometerSensor errors
+    errorMessages.put(ERROR_BAD_VALUE_FOR_ACCELEROMETER_SENSITIVITY,
+       "The value -- %s -- provided for AccelerometerSensor's sensitivity was bad. " +
+       "The only legal values are 1, 2, or 3.");
+    //Sharing errors
+    errorMessages.put(ERROR_FILE_NOT_FOUND_FOR_SHARING,
+        "The File %s could not be found on your device.");
+    //File Errors
+    errorMessages.put(ERROR_CANNOT_FIND_FILE, "The file %s could not be found");
+    errorMessages.put(ERROR_CANNOT_READ_FILE, "The file %s could not be opened");
+    errorMessages.put(ERROR_CANNOT_CREATE_FILE, "The file %s could not be created");
+    errorMessages.put(ERROR_CANNOT_WRITE_TO_FILE, "Cannot write to file %s");
+    errorMessages.put(ERROR_CANNOT_DELETE_ASSET, "Cannot delete asset file at %s");
+    errorMessages.put(ERROR_CANNOT_WRITE_ASSET, "Cannot write asset file at %s");
+    //Yandex.Translate translate Errors
+    errorMessages.put(ERROR_TRANSLATE_NO_KEY_FOUND, "Missing API key for the Yandex.Translate " +
+        "service.");
+    errorMessages.put(ERROR_TRANSLATE_SERVICE_NOT_AVAILABLE, "The translation service is not " +
+        "available; Please try again later.");
+    errorMessages.put(ERROR_TRANSLATE_JSON_RESPONSE, "The response from the Yandex.Translate " +
+        "service cannot be parsed; Please try again later.");
+    //TimePicker errors
+    errorMessages.put(ERROR_ILLEGAL_HOUR, "The hour must be set to a value between 0 and 23.");
+    errorMessages.put(ERROR_ILLEGAL_MINUTE, "The minute must be set to a value between 0 and 59.");
+    //DatePicker errors
+    errorMessages.put(ERROR_ILLEGAL_DATE, "The date you entered is invalid.");
   }
 
   private ErrorMessages() {
@@ -376,3 +437,4 @@ public final class ErrorMessages {
     return String.format(format, messageArgs);
   }
 }
+

@@ -1896,16 +1896,20 @@ list, use the make-yail-list constructor with no arguments.
         ((or (and (< start end) (<= step 0))
              (and (> start end) (>= step 0))
              (and (not (= start end)) (= step 0)))
-         (signal-runtime-error
-          (string-append
-           "FOR RANGE was called with a start of "
-           (number->string start)
-           " and an end of "
-           (number->string end)
-           " and a step of "
-           (number->string step)
-           ". This would run forever.")
-          "Bad inputs to FOR RANGE"))
+         ;; (Hal) I am removing the error here, on the theory that
+         ;; in thse cases the loop should simply not run
+         ;; (signal-runtime-error
+         ;;  (string-append
+         ;;   "FOR RANGE was called with a start of "
+         ;;   (number->string start)
+         ;;   " and an end of "
+         ;;   (number->string end)
+         ;;   " and a step of "
+         ;;   (number->string step)
+         ;;   ". This would run forever.")
+         ;;  "Bad inputs to FOR RANGE")
+         *the-null-value*
+         )
         (else
          (let ((stop-comparison
                 (if (< step 0) < >)))
@@ -2299,6 +2303,10 @@ list, use the make-yail-list constructor with no arguments.
     (reset-current-form-environment)
     (com.google.appinventor.components.runtime.EventDispatcher:unregisterAllEventsForDelegation)
     (*:clear *this-form*)))
+
+;; Used by the repl to set the name of the form
+(define (set-form-name form-name)
+  (*:setFormName *this-form* form-name))
 
 (define (remove-component component-name)
   (let* ((component-symbol (string->symbol component-name))

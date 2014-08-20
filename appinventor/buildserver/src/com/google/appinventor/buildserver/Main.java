@@ -22,12 +22,8 @@ import java.util.zip.ZipFile;
 public final class Main {
 
   static class CommandLineOptions {
-    @Option(name = "--isForWirelessRepl", usage = "create the AppInventorDebugger APK")
-    boolean isForWireless = false;
-
-    @Option(name = "--isForStemCellApp", usage = "create APK suitable for Phone App",
-            aliases = {"--isForRepl"})
-    boolean isForStemCellApp = false;
+    @Option(name = "--isForCompanion", usage = "create the MIT AI2 Companion APK")
+    boolean isForCompanion = false;
 
     @Option(name = "--inputZipFile", required = true,
             usage = "the ZIP file of the project to build")
@@ -44,6 +40,10 @@ public final class Main {
     @Option(name = "--childProcessRamMb",
             usage = "Maximum ram that can be used by a child processes, in MB.")
     int childProcessRamMb = 2048;
+
+    @Option(name = "--dexCacheDir",
+            usage = "the directory to cache the pre-dexed libraries")
+    String dexCacheDir = null;
   }
 
   private static CommandLineOptions commandLineOptions = new CommandLineOptions();
@@ -81,9 +81,9 @@ public final class Main {
     Result result = projectBuilder.build(commandLineOptions.userName,
                                          zip,
                                          commandLineOptions.outputDir,
-                                         commandLineOptions.isForStemCellApp,
-                                         commandLineOptions.isForWireless,
-                                         commandLineOptions.childProcessRamMb);
+                                         commandLineOptions.isForCompanion,
+                                         commandLineOptions.childProcessRamMb,
+                                         commandLineOptions.dexCacheDir);
     System.exit(result.getResult());
   }
 

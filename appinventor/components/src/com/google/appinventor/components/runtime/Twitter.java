@@ -54,29 +54,29 @@ import com.google.appinventor.components.runtime.util.ErrorMessages;
  * @author josmasflores@gmail.com (Jose Dominguez) - added the twitter4j 3.0.3 jars and fixed auth bug 2413
  * @author edwinhzhang@gmail.com (Edwin Zhang) - added twitter4j-media-support-3.03 jar, status + image upload
  */
-@DesignerComponent(version = YaVersion.TWITTER_COMPONENT_VERSION, description = "<p>A non-visible component that enables communication "
+@DesignerComponent(version = YaVersion.TWITTER_COMPONENT_VERSION, description = "A non-visible component that enables communication "
     + "with <a href=\"http://www.twitter.com\" target=\"_blank\">Twitter</a>. "
     + "Once a user has logged into their Twitter account (and the authorization has been confirmed successful by the "
     + "<code>IsAuthorized</code> event), many more operations are available:<ul>"
-    + "<li> Searching Twitter for tweets or labels (<code>SearchTwitter</code>)</li>"
+    + "<li> Searching Twitter for tweets or labels (<code>SearchTwitter</code>)</li>\n"
     + "<li> Sending a Tweet (<code>Tweet</code>)"
-    + "     </li>"
+    + "     </li>\n"
     + "<li> Sending a Tweet with an Image (<code>TweetWithImage</code>)"
-    + "     </li>"
+    + "     </li>\n"
     + "<li> Directing a message to a specific user "
-    + "     (<code>DirectMessage</code>)</li> "
+    + "     (<code>DirectMessage</code>)</li>\n "
     + "<li> Receiving the most recent messages directed to the logged-in user "
-    + "     (<code>RequestDirectMessages</code>)</li> "
-    + "<li> Following a specific user (<code>Follow</code>)</li>"
-    + "<li> Ceasing to follow a specific user (<code>StopFollowing</code>)</li>"
+    + "     (<code>RequestDirectMessages</code>)</li>\n "
+    + "<li> Following a specific user (<code>Follow</code>)</li>\n"
+    + "<li> Ceasing to follow a specific user (<code>StopFollowing</code>)</li>\n"
     + "<li> Getting a list of users following the logged-in user "
-    + "     (<code>RequestFollowers</code>)</li> "
+    + "     (<code>RequestFollowers</code>)</li>\n "
     + "<li> Getting the most recent messages of users followed by the "
-    + "     logged-in user (<code>RequestFriendTimeline</code>)</li> "
+    + "     logged-in user (<code>RequestFriendTimeline</code>)</li>\n "
     + "<li> Getting the most recent mentions of the logged-in user "
-    + "     (<code>RequestMentions</code>)</li></ul></p> "
+    + "     (<code>RequestMentions</code>)</li></ul></p>\n "
     + "<p>You must obtain a Comsumer Key and Consumer Secret for Twitter authorization "
-    + " specific to your app from http://twitter.com/oauth_clients/new </p>",
+    + " specific to your app from http://twitter.com/oauth_clients/new",
     category = ComponentCategory.SOCIAL, nonVisible = true, iconName = "images/twitter.png")
 @SimpleObject
 @UsesPermissions(permissionNames = "android.permission.INTERNET")
@@ -191,7 +191,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
    *          the key for use in Twitter OAuth
    */
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_STRING, defaultValue = "")
-  @SimpleProperty
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR, description = "The the consumer key to be used when authorizing with Twitter via OAuth.")
   public void ConsumerKey(String consumerKey) {
     this.consumerKey = consumerKey;
   }
@@ -212,7 +212,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
    *          the secret for use in Twitter OAuth
    */
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_STRING, defaultValue = "")
-  @SimpleProperty
+  @SimpleProperty(description="The consumer secret to be used when authorizing with Twitter via OAuth")
   public void ConsumerSecret(String consumerSecret) {
     this.consumerSecret = consumerSecret;
   }
@@ -233,7 +233,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
    *          the API Key for image uploading, given by TwitPic
    */
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_STRING, defaultValue = "")
-  @SimpleProperty
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR, description="The API Key for image uploading, provided by TwitPic.")
   public void TwitPic_API_Key(String TwitPic_API_Key) {
     this.TwitPic_API_Key = TwitPic_API_Key;
   }
@@ -486,7 +486,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       + "<p><u>Requirements</u>: This should only be called after the "
       + "<code>IsAuthorized</code> event has been raised, indicating that the "
       + "user has successfully logged in to Twitter.</p>" )
-  public void TweetWithImage(final String status, final String ImagePath) {
+  public void TweetWithImage(final String status, final String imagePath) {
     if (twitter == null || userName.length() == 0) {
       form.dispatchErrorOccurredEvent(this, "TweetWithImage",
           ErrorMessages.ERROR_TWITTER_SET_STATUS_FAILED, "Need to login?");
@@ -496,6 +496,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
     AsynchUtil.runAsynchronously(new Runnable() {
       public void run() {
         try {
+          // Build the Twitter4j Configuration
           ConfigurationBuilder builder = new ConfigurationBuilder().setMediaProviderAPIKey(TwitPic_API_Key);
           builder.setOAuthConsumerKey(ConsumerKey());
           builder.setOAuthConsumerSecret(ConsumerSecret());
@@ -504,9 +505,14 @@ public final class Twitter extends AndroidNonvisibleComponent implements
           Configuration conf = builder.build();
           ImageUpload upload = new ImageUploadFactory(conf).getInstance(MediaProvider.TWITPIC);
           String url = "";
-            if (new File(ImagePath).exists()) {
-              url = upload.upload(new File(ImagePath));
-            }
+          String cleanImagePath = imagePath;
+          // Clean up the file path if necessary
+          if (cleanImagePath.startsWith("file://")) {
+            cleanImagePath = imagePath.replace("file://", "");
+          }
+          if (new File(cleanImagePath).exists()) {
+            url = upload.upload(new File(cleanImagePath));
+          }
           twitter.updateStatus(status + " " + url);
         } catch (TwitterException e) {
           form.dispatchErrorOccurredEvent(Twitter.this, "TweetWithImage",
@@ -886,7 +892,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
           ErrorMessages.ERROR_TWITTER_SEARCH_FAILED, "Need to login?");
       return;
     }
-    AsynchUtil.runAsynchronously(new Runnable() { 
+    AsynchUtil.runAsynchronously(new Runnable() {
       List<Status> tweets = Collections.emptyList();
 
       public void run() {
@@ -957,7 +963,7 @@ public final class Twitter extends AndroidNonvisibleComponent implements
       catch (IllegalStateException ies) {
         //ignore: it means that the consumer data was already set
       }
-      if (userName.isEmpty()) {
+      if (userName.trim().length() == 0) {
         User user;
         try {
           user = twitter.verifyCredentials();

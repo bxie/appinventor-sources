@@ -16,48 +16,90 @@ import android.text.util.Rfc822Token;
 import android.view.View;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
+import android.util.Log;
+
+import com.google.appinventor.components.runtime.util.HoneycombUtil;
+import com.google.appinventor.components.runtime.util.SdkLevel;
 
 /**
- * EmailAddressAdapter provides email address completion from contacts, 
+ * EmailAddressAdapter provides email address completion from contacts,
  * for use as a list adapter.
- * 
- * <p>Note that most of this code was copied from 
+ *
+ * <p>Note that most of this code was copied from
  * partner/google/apps/Gmail/src/com/google/android/gm/EmailAddressAdapter.java
- * 
+ *
  * @author sharon@google.com (Sharon Perl)
+ * @author hal@mit.edu (Hal Abelson)
  */
 
 public class EmailAddressAdapter extends ResourceCursorAdapter {
-  public static final int NAME_INDEX = 1;
-  public static final int DATA_INDEX = 2;
 
-  private static final String SORT_ORDER = People.TIMES_CONTACTED + " DESC, " + People.NAME;
+  private static final boolean DEBUG = false;
+  private static final String TAG = "EmailAddressAdapter";
+
+  public static final int PRE_HONEYCOMB_NAME_INDEX = 1;
+  public static final int PRE_HONEYCOMB_DATA_INDEX = 2;
+
+  private static String SORT_ORDER;
+
   private ContentResolver contentResolver;
 
-  private static final String[] PROJECTION = {
-    ContactMethods._ID,     // 0
-    ContactMethods.NAME,    // 1
-    ContactMethods.DATA     // 2
+  private Context context;
+
+  private static final String[] PRE_HONEYCOMB_PROJECTION = {
+    ContactMethods._ID,    // 0
+    ContactMethods.NAME,   // 1
+    ContactMethods.DATA,   // 2
   };
+
+  private static final String[] POST_HONEYCOMB_PROJECTION = HoneycombUtil.getEmailAdapterProjection();
 
   public EmailAddressAdapter(Context context) {
     super(context, android.R.layout.simple_dropdown_item_1line, null);
     contentResolver = context.getContentResolver();
+    this.context = context;
+    if (SdkLevel.getLevel() >= SdkLevel.LEVEL_HONEYCOMB) {
+      SORT_ORDER = HoneycombUtil.getTimesContacted() + " DESC, " + HoneycombUtil.getDisplayName();
+    } else {
+      SORT_ORDER = People.TIMES_CONTACTED + " DESC, " + People.NAME;
+    }
   }
 
   @Override
   public final String convertToString(Cursor cursor) {
-    String name = cursor.getString(NAME_INDEX);
-    String address = cursor.getString(DATA_INDEX);
+
+    int POST_HONEYCOMB_NAME_INDEX = cursor.getColumnIndex(HoneycombUtil.getDisplayName());
+    int POST_HONEYCOMB_EMAIL_INDEX = cursor.getColumnIndex(HoneycombUtil.getEmailAddress());
+    String name = "";
+    String address = "";
+
+    if (SdkLevel.getLevel() >= SdkLevel.LEVEL_HONEYCOMB) {
+      name = cursor.getString(POST_HONEYCOMB_NAME_INDEX);
+      address = cursor.getString(POST_HONEYCOMB_EMAIL_INDEX);
+    } else {
+      name = cursor.getString(PRE_HONEYCOMB_NAME_INDEX);
+      address = cursor.getString(PRE_HONEYCOMB_DATA_INDEX);
+    }
 
     return new Rfc822Token(name, address, null).toString();
   }
 
   private final String makeDisplayString(Cursor cursor) {
+
+    int POST_HONEYCOMB_NAME_INDEX = cursor.getColumnIndex(HoneycombUtil.getDisplayName());
+    int POST_HONEYCOMB_EMAIL_INDEX = cursor.getColumnIndex(HoneycombUtil.getEmailAddress());
     StringBuilder s = new StringBuilder();
     boolean flag = false;
-    String name = cursor.getString(NAME_INDEX);
-    String address = cursor.getString(DATA_INDEX);
+    String name = "";
+    String address = "";
+
+    if (SdkLevel.getLevel() >= SdkLevel.LEVEL_HONEYCOMB) {
+      name = cursor.getString(POST_HONEYCOMB_NAME_INDEX);
+      address = cursor.getString(POST_HONEYCOMB_EMAIL_INDEX);
+    } else {
+      name = cursor.getString(PRE_HONEYCOMB_NAME_INDEX);
+      address = cursor.getString(PRE_HONEYCOMB_DATA_INDEX);
+    }
 
     if (!TextUtils.isEmpty(name)) {
       s.append(name);
@@ -84,23 +126,49 @@ public class EmailAddressAdapter extends ResourceCursorAdapter {
 
   @Override
   public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
+
     String where = null;
+    android.net.Uri db = null;
+    StringBuilder s = new StringBuilder();
 
     if (constraint != null) {
       String filter = DatabaseUtils.sqlEscapeString(constraint.toString() + '%');
 
-      StringBuilder s = new StringBuilder();
-      s.append("(people.name LIKE ");
-      s.append(filter);
-      s.append(") OR (contact_methods.data LIKE ");
-      s.append(filter);
-      s.append(")");
+      if (SdkLevel.getLevel() >= SdkLevel.LEVEL_HONEYCOMB) {
+        db = HoneycombUtil.getDataContentUri();
+        s.append("(" + HoneycombUtil.getDataMimeType() + "='" + HoneycombUtil.getEmailType() + "')");
+        s.append(" AND ");
+        s.append("(display_name LIKE ");
+        s.append(filter);
+        s.append(")");
+      } else {
+        db = ContactMethods.CONTENT_EMAIL_URI;
+        s.append("(name LIKE ");
+        s.append(filter);
+        s.append(") OR (display_name LIKE ");
+        s.append(filter);
+        s.append(")");
+      }
+    }
+    where = s.toString();
 
-      where = s.toString();
+    // Note(hal): This lists the column names in the table being accessed, since they aren't
+    // obvious to me from the documentation
+    if (DEBUG) {
+      Cursor c = context.getContentResolver().query(db, null, null, null, null, null);
+      Log.d(TAG, "listing columns");
+      for (int i = 0; i<c.getColumnCount(); i++) {
+        Log.d(TAG, "column " + i + "=" + c.getColumnName(i));
+      }
     }
 
-    return contentResolver.query(ContactMethods.CONTENT_EMAIL_URI, PROJECTION, 
-        where, null, SORT_ORDER);
+    if (SdkLevel.getLevel() >= SdkLevel.LEVEL_HONEYCOMB) {
+      return contentResolver.query(db, POST_HONEYCOMB_PROJECTION,
+          where, null, SORT_ORDER);
+    } else {
+      return contentResolver.query(db, PRE_HONEYCOMB_PROJECTION,
+          where, null, SORT_ORDER);
+    }
   }
 }
 

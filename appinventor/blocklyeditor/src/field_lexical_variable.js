@@ -1,30 +1,25 @@
+// -*- mode: java; c-basic-offset: 2; -*-
+// Copyright 2013-2014 MIT, All rights reserved
+// Released under the MIT License https://raw.github.com/mit-cml/app-inventor/master/mitlicense.txt
 /**
- * Visual Blocks Editor
- *
- * Copyright 2012 Google Inc.
- * http://code.google.com/p/blockly/
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
+ * @license
  * @fileoverview Drop-down chooser of variables in the current lexical scope for App Inventor
  * @author fturbak@wellesley.com (Lyn Turbak)
  */
+
 'use strict';
 
 /**
  * Lyn's History:
+ *  [lyn, 04/13/14] Modify calculation of global variable names:
+ *    1. Use getTopBlocks rather than getAllBlocks; the latter, in combination with quadratic memory
+ *       allocation space from Neil's getAllBlocks, was leading to cubic memory allocation space,
+ *       which led to lots of time wasted due to allocation and GC. This change dramatically
+ *       reduces allocation times and GC
+ *    2. Introduce caching for Blockly.WarningHandler.checkAllBlocksForWarningsAndErrors().
+ *       This change reduces allocation times and GC even further.
+ *  [lyn, 10/28/13] Made identifier legality check more restrictive by removing arithmetic
+ *     and logical ops as possible identifier characters
  *  [lyn, 10/27/13] Create legality filter & transformer for AI2 variable names
  *  [lyn, 10/26/13] Fixed renaming of globals and lexical vars involving empty strings and names with internal spaces.
  *  [lyn, 12/23-27/12] Updated to:
@@ -78,6 +73,7 @@ Blockly.FieldLexicalVariable.prototype.getValue = function() {
  * @param {string} text New text.
  */
 Blockly.FieldLexicalVariable.prototype.setValue = function(text) {
+  this.value_ = text;
   this.setText(text);
 };
 
@@ -120,13 +116,21 @@ Blockly.FieldLexicalVariable.prototype.setCachedParent = function(parent) {
 // * Removed from prototype and stripped off "global" prefix (add it elsewhere)
 // * Add optional excluded block argument as in Neil's code to avoid global declaration being created
 Blockly.FieldLexicalVariable.getGlobalNames = function (optExcludedBlock) {
+  if (Blockly.Instrument.useLynCacheGlobalNames && Blockly.WarningHandler.cacheGlobalNames) {
+    return Blockly.WarningHandler.cachedGlobalNames;
+  }
   var globals = [];
   if (Blockly.mainWorkspace) {
-    var blocks = Blockly.mainWorkspace.getAllBlocks(); // [lyn, 11/10/12] Is there a better way to get workspace? 
+    var blocks = [];
+    if (Blockly.Instrument.useLynGetGlobalNamesFix) {
+      blocks = Blockly.mainWorkspace.getTopBlocks(); // [lyn, 04/13/14] Only need top blocks, not all blocks!
+    } else {
+      blocks = Blockly.mainWorkspace.getAllBlocks(); // [lyn, 11/10/12] Is there a better way to get workspace?
+    }
     for (var i = 0; i < blocks.length; i++) {
       var block = blocks[i];
       if ((block.type === 'global_declaration') && (block != optExcludedBlock)) {
-          globals.push(block.getTitleValue('NAME'));
+          globals.push(block.getFieldValue('NAME'));
       }
     }
   }
@@ -188,11 +192,11 @@ Blockly.FieldLexicalVariable.prototype.getNamesInScope = function () {
           // [lyn, 11/29/12] Added parameters for control constructs.
           } else if ( (parent.type === "controls_forEach")
                      && (parent.getInputTargetBlock('DO') == child)) {// Only DO is in scope, not other inputs!
-              var loopName = parent.getTitleValue('VAR');
+              var loopName = parent.getFieldValue('VAR');
               rememberName(loopName, loopNames, Blockly.loopParameterPrefix); 
           } else if ( (parent.type === "controls_forRange")
                      && (parent.getInputTargetBlock('DO') == child)) {// Only DO is in scope, not other inputs!
-              var rangeName = parent.getTitleValue('VAR');
+              var rangeName = parent.getFieldValue('VAR');
               rememberName(rangeName, rangeNames, Blockly.loopRangeParameterPrefix);
 
           } else if ( ( parent.type === "local_declaration_expression" 
@@ -269,6 +273,7 @@ Blockly.FieldLexicalVariable.dropdownCreate = function() {
 Blockly.FieldLexicalVariable.dropdownChange = function(text) {
   if (text) {
     this.setText(text);
+    Blockly.WarningHandler.checkErrors.call(this.sourceBlock_);
   }
   // window.setTimeout(Blockly.Variables.refreshFlyoutCategory, 1);
 };
@@ -512,9 +517,17 @@ Blockly.LexicalVariable.renameParam = function (newName) {
  * [lyn, 10/27/13]
  * Checks an identifier for validity. Validity rules are a simplified version of Kawa identifier rules.
  * They assume that the YAIL-generated version of the identifier will be preceded by a legal Kawa prefix:
+ *
  *   <identifier> = <first><rest>*
- *   <first> = letter U charsIn("_!$%&?^*~/+-.@>=<")
+ *   <first> = letter U charsIn("_$?~@")
  *   <rest> = <first> U digit
+ *
+ *   Note: an earlier verison also allowed characters in "!&%.^/+-*>=<",
+ *   but we decided to remove these because (1) they may be used for arithmetic,
+ *   logic, and selection infix operators in a future AI text language, and we don't want
+ *   things like a+b, !c, d.e to be ambiguous between variables and other expressions.
+ *   (2) using chars in "><&" causes HTML problems with getters/setters in flydown menu.
+ *
  * First transforms the name by removing leading and trailing whitespace and
  * converting nonempty sequences of internal whitespace to '_'.
  * Returns a result object of the form {transformed: <string>, isLegal: <bool>}, where:
@@ -524,8 +537,7 @@ Blockly.LexicalVariable.renameParam = function (newName) {
 Blockly.LexicalVariable.checkIdentifier = function(ident) {
   var transformed = ident.trim() // Remove leading and trailing whitespace
                          .replace(/[\s\xa0]+/g, '_'); // Replace nonempty sequences of internal spaces by underscores
-  console.log(ident + " transformed to " + transformed);
-  var regexp = /^[a-zA-Z_\!\$%&\?\^\*~\/\+-.@>\=<][\w_\!\$%&\?\^\*~\/\+-.@>\=<]*$/;
+  var regexp = /^[a-zA-Z_\$\?~@][\w_\$\?~@]*$/;
   var isLegal = transformed.search(regexp) == 0;
   return {isLegal: isLegal, transformed: transformed};
 }
@@ -559,7 +571,7 @@ Blockly.LexicalVariable.referenceResult = function (block, name, prefix, env) {
   var referenceResults = []; // For collected reference results in subblocks
   // Handle constructs that can introduce names here specially (should figure out a better way to generalize this!)
   if (block.type === "controls_forEach") {
-    var loopVar = block.getTitleValue('VAR');
+    var loopVar = block.getFieldValue('VAR');
     if (Blockly.usePrefixInYail) { // Invariant: Blockly.showPrefixToUser must also be true!
       loopVar = (Blockly.possiblyPrefixMenuNameWith(Blockly.loopParameterPrefix))(loopVar)
     }
@@ -569,7 +581,7 @@ Blockly.LexicalVariable.referenceResult = function (block, name, prefix, env) {
     var nextResults = Blockly.LexicalVariable.referenceResult(Blockly.LexicalVariable.getNextTargetBlock(block), name, prefix, env);
     referenceResults = [listResults,doResults,nextResults];
   } else if (block.type === "controls_forRange") {
-    var loopVar = block.getTitleValue('VAR');
+    var loopVar = block.getFieldValue('VAR');
     if (Blockly.usePrefixInYail) { // Invariant: Blockly.showPrefixToUser must also be true!
       loopVar = (Blockly.possiblyPrefixMenuNameWith(Blockly.loopRangeParameterPrefix))(loopVar)
     }
@@ -584,7 +596,7 @@ Blockly.LexicalVariable.referenceResult = function (block, name, prefix, env) {
     // Collect locally declared names ... 
     var localDeclNames = [];
     for(var i=0; block.getInput('DECL' + i); i++) {
-      var localName = block.getTitleValue('VAR' + i);
+      var localName = block.getFieldValue('VAR' + i);
       if (Blockly.usePrefixInYail) { // Invariant: Blockly.showPrefixToUser must also be true!
         localName = (Blockly.possiblyPrefixMenuNameWith(Blockly.localNamePrefix))(localName)
       }
@@ -617,7 +629,7 @@ Blockly.LexicalVariable.referenceResult = function (block, name, prefix, env) {
   }
   // Base case: getters/setters is where all the interesting action occurs
   if ((block.type === "lexical_variable_get") || (block.type === "lexical_variable_set")) {
-    var possiblyPrefixedReferenceName = block.getTitleValue('VAR');
+    var possiblyPrefixedReferenceName = block.getFieldValue('VAR');
     var unprefixedPair = Blockly.unprefixName(possiblyPrefixedReferenceName);
     var referencePrefix = unprefixedPair[0];
     var referenceName = unprefixedPair[1];

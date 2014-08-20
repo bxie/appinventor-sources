@@ -104,6 +104,13 @@ public final class Image extends AndroidViewComponent {
     ViewUtil.setImage(view, drawable);
   }
 
+  @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_BOOLEAN,
+      defaultValue = "False")
+  @SimpleProperty
+  public void ScalePictureToFit(boolean scale) {
+    if (scale)
+      view.setScaleType(ImageView.ScaleType.FIT_XY);
+  }
 
   /**
    * Animation property setter method.
@@ -112,8 +119,14 @@ public final class Image extends AndroidViewComponent {
    *
    * @param animation  animation kind
    */
-  @SimpleProperty(
+  @SimpleProperty(description = "This is a limited form of animation that can attach " +
+      "a small number of motion types to images.  The allowable motions are " +
+      "ScrollRightSlow, ScrollRight, ScrollRightFast, ScrollLeftSlow, ScrollLeft, " +
+      "ScrollLeftFast, and Stop",
       category = PropertyCategory.APPEARANCE)
+  // TODO(user): This should be changed from a property to an "animate" method, and have the choices
+  // placed in a dropdown.  Aternatively the whole thing should be removed and we should do
+  // something that is more consistent with sprites.
   public void Animation(String animation) {
     AnimationUtil.ApplyAnimation(view, animation);
   }

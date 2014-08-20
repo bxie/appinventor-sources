@@ -231,16 +231,60 @@ public class YaVersion {
   // - FORM_COMPONENT_VERSION was incremented to 11.
   // For YOUNG_ANDROID_VERSION 80:
   // - LISTPICKER_COMPONENT_VERSION was incremented to 7.
+  // For YOUNG_ANDROID_VERSION 81:
+  // - NOTIFIER_COMPONENT_VERSION was incremented to 3.
+  // For YOUNG_ANDROID_VERSION 82:
+  // - ACCELEROMETERSENSOR_COMPONENT_VERSION was incremented to 3.
+  // For YOUNG_ANDROID_VERSION 83:
+  // - LISTPICKER_COMPONENT_VERSION was incremented to 8.
+  // For YOUNG_ANDROID_VERSION 84:
+  // - FORM_COMPONENT_VERSION was incremented to 12.
+  // For YOUNG_ANDROID_VERSION 85:
+  // - CAMERA_COMPONENT_VERSION was incremented to 2.
+  // For YOUNG_ANDROID_VERSION 86:
+  // - VIDEOPLAYER_COMPONENT_VERSION was incremented to 5.
+  // - The Sharing Component was added
+  // For YOUNG_ANDROID_VERSION 87:
+  // - WEBVIEWER_COMPONENT_VERSION was incremented to 4
+  // For YOUNG_ANDROID_VERSION 88:
+  // - SPINNER_COMPONENT_VERSION was incremented to 1
+  // For YOUNG_ANDROID_VERSION 89:
+  // - LISTVIEW_COMPONENT_VERSION was incremented to 1.
+  // For YOUNG_ANDROID_VERSION 90:
+  // - TEXTTOSPEECH_COMPONENT_VERSION was incremented to 2
+  // For YOUNG_ANDROID_VERSION 91:
+  // - DATEPICKER_COMPONENT_VERSION was incremented to 1.
+  // For YOUNG_ANDROID_VERSION 92:
+  // - TIMEPICKER_COMPONENT_VERSION was incremented to 1
+  // For YOUNG_ANDROID_VERSION 93:
+  // - FILE_COMPONENT_VERSION was incremented to 1.
+  // For YOUNG_ANDROID_VERSION 94:
+  // - YANDEX_COMPONENT_VERSION was incremented to 1.
+  // For YOUNG_ANDROID_VERSION 95:
+  // - BUTTON_COMPONENT_VERSION was incremented to 6.
+  // For YOUNG_ANDROID_VERSION 96:
+  // - TIMEPICKER_COMPONENT_VERSION was incremented to 2.
+  // For YOUNG_ANDROID_VERSION 97:
+  // - PLAYER_COMPONENT_VERSION was incremented to 6
+  // For YOUNG_ANDROID_VERSION 98:
+  // - PHONECALL_COMPONENT_VERSION was incremented to 2.
+  // For YOUNG_ANDROID_VERSION 99:
+  // - CONTACTPICKER_COMPONENT_VERSION was incremented to 5
+  // For YOUNG_ANDROID_VERSION 100:
+  // - DATEPICKER_COMPONENT_VERSION was incremented to 2.
+  // For YOUNG_ANDROID_VERSION 101:
+  // - FORM_COMPONENT_VERSION was incremented to 13.
 
-    public static final int YOUNG_ANDROID_VERSION = 80;
+  public static final int YOUNG_ANDROID_VERSION = 101;
 
   // ............................... Blocks Language Version Number ...............................
 
   // NOTE(lizlooney,user) - when the blocks language changes:
   // 1. Increment YOUNG_ANDROID_VERSION above.
   // 2. Increment BLOCKS_LANGUAGE_VERSION here
-  // 3. Add code in yacodeblocks.BlockSaveFile#upgradeLanguage to upgrade the .blk file contents
+  // 3. ***Add code in yacodeblocks.BlockSaveFile#upgradeLanguage to upgrade the .blk file contents
   // 4. Add code in YoungAndroidFormUpgrader to upgrade the source file
+  // *** BlockSaveFile is no longer used in App Inventor 2 (Feb. 2014)
 
   // For BLOCKS_LANGUAGE_VERSION 2:
   // - Allow arguments of different procedures and events to have the same names.
@@ -284,6 +328,7 @@ public class YaVersion {
   // - Marked close-screen-with-result as a bad block
   // - Added close-screen-with-value
   // - Added close-screen-with-plain-text
+
   public static final int BLOCKS_LANGUAGE_VERSION = 17;
 
   // ................................. Component Version Numbers ..................................
@@ -298,13 +343,15 @@ public class YaVersion {
   // 3. Add code in com.google.appinventor.client.youngandroid.YoungAndroidFormUpgrader#
   //    upgradeComponentProperties to upgrade the .scm file contents
   // 4. Add code in openblocks.yacodeblocks.BlockSaveFile#upgradeComponentBlocks to
-  //    upgrade the .blk file contents
+  //    upgrade the .blk file contents (not used in AI 2)
 
   //For ACCELEROMETERSENSOR_COMPONENT_VERSION 2:
   // - AccelerometerSensor.MinimumInterval property was added.
   // - AccelerometerSensor.AccelerationChanged method was modified to wait for
   //   the minimum interval to elapse before calling a shaking event when necessary.
-  public static final int ACCELEROMETERSENSOR_COMPONENT_VERSION = 2;
+  //For ACCELEROMETERSENSOR_COMPONENT_VERSION 3:
+  // - AccelerometerSensor.Sensitivty property was added.
+  public static final int ACCELEROMETERSENSOR_COMPONENT_VERSION = 3;
 
   // For ACTIVITYSTARTER_COMPONENT_VERSION 2:
   // - The ActivityStarter.DataType, ActivityStarter.ResultType, and ActivityStarter.ResultUri
@@ -359,11 +406,16 @@ public class YaVersion {
   // - The Shape property was added.
   // For BUTTON_COMPONENT_VERSION 5:
   // - The ShowFeedback property was added.
-  public static final int BUTTON_COMPONENT_VERSION = 5;
+  // For BUTTON_COMPONENT_VERSION 6:
+  // - Added TouchUp and TouchDown events
+  // - FontSize, FontBold, FontItalic properties made visible in block editor
+  public static final int BUTTON_COMPONENT_VERSION = 6;
 
   public static final int CAMCORDER_COMPONENT_VERSION = 1;
 
-  public static final int CAMERA_COMPONENT_VERSION = 1;
+  // For CAMERA_COMPONENT_VERSION 2:
+  // - The UseFront property was added.
+   public static final int CAMERA_COMPONENT_VERSION = 2;
 
   // For CANVAS_COMPONENT_VERSION 2:
   // - The LineWidth property was added.
@@ -394,11 +446,25 @@ public class YaVersion {
   // - The method Open was added.
   // For CONTACTPICKER_COMPONENT_VERSION 4:
   // - The Shape property was added.
-  public static final int CONTACTPICKER_COMPONENT_VERSION = 4;
+  // For CONTACTPICKER_COMPONENT_VERSION 5:
+  // - Added PhoneNumber, PhoneNumberList, and EmailAddressList to ContactPicker.
+  // - For Eclair and up, we now use ContactsContract instead of the deprecated Contacts.
+  public static final int CONTACTPICKER_COMPONENT_VERSION = 5;
 
   // For EMAILPICKER_COMPONENT_VERSION 2:
   // - The Alignment property was renamed to TextAlignment.
   public static final int EMAILPICKER_COMPONENT_VERSION = 2;
+
+  // For DATEPICKER_COMPONENT_VERSION 2:
+  // The datepicker dialog was updated to show the current date
+  // instead of the last set date by default.
+  // The SetDateToDisplay and LaunchPicker methods were added to
+  // give the user more control of what time is displayed in the
+  // datepicker dialog.
+  public static final int DATEPICKER_COMPONENT_VERSION = 2;
+
+  // For FILE_COMPONENT_VERSION 1:
+  public static final int FILE_COMPONENT_VERSION = 1;
 
   // For FORM_COMPONENT_VERSION 2:
   // - The Screen.Scrollable property was added.
@@ -423,7 +489,11 @@ public class YaVersion {
   // - The BackPressed event was added.
   // For FORM_COMPONENT_VERSION 11:
   // - OpenScreenAnimation and CloseScreenAnimation are now properties.
-  public static final int FORM_COMPONENT_VERSION = 11;
+  // For FORM_COMPONENT_VERSION 12:
+  // - AboutScreen property was added
+  // For FORM_COMPONENT_VERSION 13:
+  // - The Screen.Scrollable property was set to False by default
+  public static final int FORM_COMPONENT_VERSION = 13;
 
   // For FUSIONTABLESCONTROL_COMPONENT_VERSION 2:
   // - The Fusiontables API was migrated from SQL to V1
@@ -494,7 +564,10 @@ public class YaVersion {
   //   with the parent Form's open screen animation.
   // For LISTPICKER_COMPONENT_VERSION 7:
   // - Added ShowFilterBar property
-  public static final int LISTPICKER_COMPONENT_VERSION = 7;
+  // For LISTPICKER_COMPONENT_VERSION 8:
+  // - Added title property
+
+  public static final int LISTPICKER_COMPONENT_VERSION = 8;
 
   // For LOCATIONSENSOR_COMPONENT_VERSION 2:
   // - The TimeInterval and DistanceInterval properties were added.
@@ -505,7 +578,9 @@ public class YaVersion {
 
   // For NOTIFIER_COMPONENT_VERSION 2:
   // - To ShowChooseDialog and ShowTextDialog, new arg was added to indicate if dialog is cancelable
-  public static final int NOTIFIER_COMPONENT_VERSION = 2;
+  // For NOTIFIER_COMPONENT_VERSION 3:
+  // - Added NotifierColor, TextColor and NotifierLength options
+  public static final int NOTIFIER_COMPONENT_VERSION = 3;
 
   // For ORIENTATIONSENSOR_COMPONENT_VERSION = 2:
   // - The Yaw property was renamed to Azimuth.
@@ -518,7 +593,11 @@ public class YaVersion {
 
   public static final int PEDOMETER_COMPONENT_VERSION = 1;
 
-  public static final int PHONECALL_COMPONENT_VERSION = 1;
+  // For PHONECALL_COMPONENT_VERSION 2:
+  // - The PhoneCallStarted event was added.
+  // - The PhoneCallEnded event was added.
+  // - The IncomingCallAnswered event was added.
+  public static final int PHONECALL_COMPONENT_VERSION = 2;
 
   // For PHONENUMBERPICKER_COMPONENT_VERSION 2:
   // - The Alignment property was renamed to TextAlignment.
@@ -541,8 +620,13 @@ public class YaVersion {
   // - The IsPlaying method was added.
   // For PLAYER_COMPONENT_VERSION 5:
   // - The IsLooping property was renamed to Loop.
+  // For PLAYER_COMPONENT_VERSION 6:
+  // - The PlayInForeground property was added.
+  // - The OtherPlayerStarted event was added.
 
-  public static final int PLAYER_COMPONENT_VERSION = 5;
+  public static final int PLAYER_COMPONENT_VERSION = 6;
+
+  public static final int SHARING_COMPONENT_VERSION = 1;
 
   // For SOUND_COMPONENT_VERSION 2:
   // - The Sound.SoundError event was added.
@@ -565,7 +649,8 @@ public class YaVersion {
   // - The MultiLine property was added.
   public static final int TEXTBOX_COMPONENT_VERSION = 4;
 
-  public static final int TEXTTOSPEECH_COMPONENT_VERSION = 1;
+  // For TEXTTOSPEECH_COMPONENT_VERSION, added speech pitch and rate
+  public static final int TEXTTOSPEECH_COMPONENT_VERSION = 2;
 
   // For TEXTING_COMPONENT_VERSION 2:
   // Texting over Wifi was implemented using Google Voice
@@ -577,6 +662,14 @@ public class YaVersion {
   // - receivingEnabled is now an integer in the range 1-3
   //   instead of a boolean
   public static final int TEXTING_COMPONENT_VERSION = 3;
+
+  // For TIMEPICKER_COMPONENT_VERSION 2:
+  // After feedback from the forum, the timepicker dialog was updated
+  // to show the current time instead of the last set time by default.
+  // The SetTimeToDisplay and LaunchPicker methods were added to
+  // give the user more control of what time is displayed in the
+  // timepicker dialog.
+  public static final int TIMEPICKER_COMPONENT_VERSION = 2;
 
   public static final int TINYDB_COMPONENT_VERSION = 1;
 
@@ -621,7 +714,9 @@ public class YaVersion {
   // For VIDEOPLAYER_COMPONENT_VERSION 4:
   // - The VideoPlayer.width and VideoPlayer.height variables were marked as user visible.
   // - The FullScreen property was added to the VideoPlayer.
-  public static final int VIDEOPLAYER_COMPONENT_VERSION = 4;
+  // For VIDEOPLAYER_COMPONENT_VERSION 5:
+  // - The Volume property (setter only) was added to the VideoPlayer.
+  public static final int VIDEOPLAYER_COMPONENT_VERSION = 5;
 
   public static final int VOTING_COMPONENT_VERSION = 1;
 
@@ -638,10 +733,50 @@ public class YaVersion {
   // - The CanGoForward and CanGoBack methods were added
   // For WEBVIEWER_COMPONENT_VERSION 3:
   // - Add UsesLocation property to set location permissions
-  public static final int WEBVIEWER_COMPONENT_VERSION = 3;
+  // For WEBVIEWER_COMPONENT_VERSION 4:
+  // - Add WebViewString
+  public static final int WEBVIEWER_COMPONENT_VERSION = 4;
 
   // For SLIDER_COMPONENT_VERSION 1:
   // - Initial version.
   public static final int SLIDER_COMPONENT_VERSION = 1;
+
+  // For SPINNER_COMPONENT_VERSION 1:
+  public static final int SPINNER_COMPONENT_VERSION = 1;
+
+  // For listView component Version
+  public static final int LISTVIEW_COMPONENT_VERSION = 1;
+
+  // For YANDEX_COMPONENT_VERSION 1:
+  // - Initial version.
+  public static final int YANDEX_COMPONENT_VERSION = 1;
+
+  // Rendezvous Server Location
+
+  public static final String RENDEZVOUS_SERVER = "rendezvous.appinventor.mit.edu";
+
+  // Companion Versions and Update Information
+
+  // The PREFERRED_COMPANION is displayed to the end-user if
+  // they ask (via the Help->About menu) and if they are told
+  // that they need to update their companion
+  //
+  // ACCEPTABLE_COMPANIONS is a list of Companion VersionNames
+  // which are usable with this version of the system.
+  //
+  // COMPANION_UPDATE_URL is the URL used by the Companion
+  // Update Mechanism to find the Companion to download.
+  // Note: This new Companion needs to be signed by the same
+  // key as the Companion it is replacing, as the Package Manager
+  // is invoked from the running Companion.
+
+  public static final String PREFERRED_COMPANION = "2.20ai2zx1";
+  public static final String COMPANION_UPDATE_URL = "";
+  public static final String [] ACCEPTABLE_COMPANIONS = { "2.16ai2", "2.16ai2zx1", "2.17ai2", "2.17ai2zx1",
+                                                          "2.19ai2", "2.19ai2zx1", "2.20ai2", "2.20ai2zx1" };
+
+  // Splash Screen Values
+  public static final int SPLASH_SURVEY = 1;
+
 
 }
