@@ -41,14 +41,10 @@ goog.require('Blockly.WarningHandler');
 goog.require('Blockly.Workspace');
 goog.require('Blockly.Xml');
 goog.require('goog.Timer');
-<<<<<<< HEAD
 goog.require('goog.net.XhrIo'); //BXX: For sending to couchdb
-
-=======
 goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('goog.string');
->>>>>>> master
 
 
 /**
@@ -123,11 +119,6 @@ Blockly.Block.obtain = function(workspace, prototypeName) {
  * @param {?string} prototypeName Name of the language object containing
  *     type-specific functions for this block.
  */
-<<<<<<< HEAD
- //TODO: Log here
-Blockly.Block = function(workspace, prototypeName) {
-  this.id = ++Blockly.uidCounter_;
-=======
 Blockly.Block.prototype.initialize = function(workspace, prototypeName) {
   this.id = Blockly.genUid();
   workspace.addTopBlock(this);
@@ -145,7 +136,6 @@ Blockly.Block.prototype.initialize = function(workspace, prototypeName) {
  * @param {string} prototypeName The typename of the block.
  */
 Blockly.Block.prototype.fill = function(workspace, prototypeName) {
->>>>>>> master
   this.outputConnection = null;
   this.nextConnection = null;
   this.previousConnection = null;
@@ -2084,28 +2074,6 @@ Blockly.Block.isRenderingOn = true;
  * Lays out and reflows a block based on its contents and settings.
  */
 Blockly.Block.prototype.render = function() {
-<<<<<<< HEAD
-  //BXX: Logging creation AND MOVING (don't want) of block
-  // if(this.workspace==Blockly.mainWorkspace){
-  //   var mainBlocks = Blockly.mainWorkspace.getAllBlocks();
-  //   var alreadyInWorkspace = false;
-
-  //   for(var i=0; i<mainBlocks.length; i++){
-  //     if(mainBlocks[i].id==this.id){
-  //       alreadyInWorkspace = true;
-  //     }
-  //   }
-  //   if(!alreadyInWorkspace){
-  //     console.log("Creation of Block "+ this.id);
-  //   }
-  //   console.log("Creation of Block "+ this.id);
-
-  //   //console.log("Creation for ", this);
-  // }
-  
-  if (!this.svg_) {
-    throw 'Uninitialized block cannot be rendered.  Call block.initSvg()';
-=======
   if (Blockly.Block.isRenderingOn) {
     goog.asserts.assertObject(this.svg_,
        'Uninitialized block cannot be rendered.  Call block.initSvg()');
@@ -2131,12 +2099,10 @@ Blockly.Block.prototype.renderDown = function() {
     if (Blockly.Realtime.isEnabled() && !Blockly.Realtime.withinSync) {
       Blockly.Realtime.blockChanged(this);
     }
->>>>>>> master
   }
   // [lyn, 04/08/14] Because renderDown is recursive, doesn't make sense to track its time here.
 };
 
-<<<<<<< HEAD
 //BXX: Helper function to get UUID
 //Not used due to synch issues
 // var getUUID = function(){
@@ -2227,5 +2193,3 @@ generateContent = function(id, type, action, optional){
       //'{"blockId":'+this.id+', "action":"create", "time":'+Date.now()+'}';
   return content;
 }
-=======
->>>>>>> master
