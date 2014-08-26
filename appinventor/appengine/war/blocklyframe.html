@@ -48,6 +48,10 @@
       goog.require('goog.net.XhrIo');
     </script>
     <script type="text/javascript">
+      function getURLParameter(name) {
+        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)')
+                .exec(window.parent.location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+      }
       function init() {
         tracking_url = 'http://127.0.0.1:5984' //BXX for tracking
 
