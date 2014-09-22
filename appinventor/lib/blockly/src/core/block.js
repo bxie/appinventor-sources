@@ -52,7 +52,7 @@ goog.require('goog.string');
  * @private
  */
 Blockly.uidCounter_ = 0;
-tracking_url = 'http://127.0.0.1:5984' //BXX for tracking
+tracking_url = 'http://18.236.7.114:5984' //BXX for tracking
 dbName = "proj"+window.location.hash.substr(1).toLowerCase(); //gets project name and screen name with underscore in between
 
 /**
