@@ -52,7 +52,7 @@ goog.require('goog.string');
  * @private
  */
 Blockly.uidCounter_ = 0;
-tracking_url = 'http://18.236.7.114:5984' //BXX for tracking
+tracking_url = 'http://18.102.236.246:5984' //BXX for tracking
 dbName = "proj"+window.location.hash.substr(1).toLowerCase(); //gets project name and screen name with underscore in between
 
 /**
@@ -1409,6 +1409,7 @@ Blockly.Block.prototype.getTitleValue = function(name) {
  * @param {string} name The name of the field.
  */
 Blockly.Block.prototype.setFieldValue = function(newValue, name) {
+  //BXX: Sets dropdown value. TODO: Log
   var field = this.getField_(name);
   goog.asserts.assertObject(field, 'Field "%s" not found.', name);
   field.setValue(newValue);

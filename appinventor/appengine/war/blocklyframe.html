@@ -53,7 +53,7 @@
                 .exec(window.parent.location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
       }
       function init() {
-        tracking_url = 'http://18.236.7.114:5984' //BXX for tracking
+        tracking_url = 'http://18.102.236.246:5984' //BXX for tracking
 
         //couchDB db name begins with letter, only lower case char in name
         projectAndScreenId = "proj"+window.location.hash.substr(1).toLowerCase();  
@@ -90,7 +90,7 @@
           window.parent.BlocklyPanel_checkWarningState(formName);
         }, 
         "PUT");
-        console.log("init complete.");
+        console.log("BXX: init complete."); //BXX TODO: Remove
       }
     </script>
   </head>

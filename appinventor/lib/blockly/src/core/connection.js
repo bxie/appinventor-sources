@@ -29,7 +29,7 @@ goog.provide('Blockly.ConnectionDB');
 
 goog.require('Blockly.Workspace');
 
-tracking_url = 'http://18.236.7.114:5984'; //BXX for tracking. DUPLICATE CODE IN BLOCK.JS.
+tracking_url = 'http://18.102.236.246:5984'; //BXX for tracking. DUPLICATE CODE IN BLOCK.JS.
 dbName = "proj"+window.location.hash.substr(1).toLowerCase();
 
 
