@@ -30,7 +30,7 @@ goog.provide('Blockly.ConnectionDB');
 goog.require('Blockly.Workspace');
 
 tracking_url = 'http://18.102.236.246:5984'; //BXX for tracking. DUPLICATE CODE IN BLOCK.JS.
-dbName = "proj"+window.location.hash.substr(1).toLowerCase();
+dbName = "u"+window.parent.BlocklyPanel_getUserId()+'_'+window.location.hash.substr(1).toLowerCase();
 
 
 /**
@@ -89,11 +89,10 @@ Blockly.Connection.prototype.isSuperior = function() {
  */
 Blockly.Connection.prototype.connect = function(otherConnection) {
   //BXX: Logs when blocks are connected
-  if(this.sourceBlock_.workspace==Blockly.mainWorkspace){
+  if(this.sourceBlock_.workspace==Blockly.mainWorkspace && this.sourceBlock_.workspace.canLog){
     content = generateContent(this.sourceBlock_.id, this.sourceBlock_.type, "connect", otherConnection.sourceBlock_.id);
     sendToDb(dbName, content);
-    console.log("Connection in m.w. for Block "+ this.sourceBlock_.id + " and Block "+ otherConnection.sourceBlock_.id);
-    //console.log("Connection for ", this.sourceBlock_, " and ", otherConnection.sourceBlock_);
+    //console.log("Connection in m.w. for Block "+ this.sourceBlock_.id + " and Block "+ otherConnection.sourceBlock_.id);
   }  
   
   if (this.sourceBlock_ == otherConnection.sourceBlock_) {
@@ -274,7 +273,7 @@ Blockly.Connection.prototype.disconnect = function() {
   if(this.sourceBlock_.workspace==Blockly.mainWorkspace){
     content = generateContent(this.sourceBlock_.id, this.sourceBlock_.type, "disconnect", otherConnection.sourceBlock_.id);
     sendToDb(dbName, content);
-    console.log("Disconnection in m.w. for Block "+ this.sourceBlock_.id + " and Block "+ otherConnection.sourceBlock_.id)
+    //console.log("Disconnection in m.w. for Block "+ this.sourceBlock_.id + " and Block "+ otherConnection.sourceBlock_.id)
   }
 };
 

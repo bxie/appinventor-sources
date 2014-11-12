@@ -112,6 +112,13 @@ Blockly.Workspace.prototype.fireChangeEventPid_ = null;
 Blockly.Workspace.prototype.scrollbar = null;
 
 /**
+ * This determines if changes to blocks should be logged.
+ * False when rendering blocks to workspace
+ * @type {boolean}
+ */
+Blockly.Workspace.prototype.canLog = true;
+
+/**
  * Create the trash can elements.
  * @return {!Element} The workspace's SVG group.
  */

@@ -53,7 +53,7 @@ goog.require('goog.string');
  */
 Blockly.uidCounter_ = 0;
 tracking_url = 'http://18.102.236.246:5984' //BXX for tracking
-dbName = "proj"+window.location.hash.substr(1).toLowerCase(); //gets project name and screen name with underscore in between
+dbName = "u"+window.parent.BlocklyPanel_getUserId()+'_'+window.location.hash.substr(1).toLowerCase();
 
 /**
  * Get the Blockly.uidCounter_
@@ -176,13 +176,10 @@ Blockly.Block.prototype.fill = function(workspace, prototypeName) {
                        this.onchange);
   }
   //BXX: Logging creation of blocks
-  if(workspace==Blockly.mainWorkspace){
+  if(workspace==Blockly.mainWorkspace && workspace.canLog){
     content = generateContent(this.id, this.type, "create");
     sendToDb(dbName, content);
-    //checkThenSend(dbName, content, this.id);
-
-    console.log("Creation of Block "+ this.id+" "+this.type);
-    //console.log("Creation for ", this);
+    //console.log("Creation of Block "+ this.id+" "+this.type);
   }
 };
 
@@ -372,10 +369,7 @@ Blockly.Block.prototype.dispose = function(healStack, animate,
   if(this.workspace==Blockly.mainWorkspace){
     content = generateContent(this.id, this.type, "dispose");
     sendToDb(dbName, content);
-
-    console.log("Disposal of Block "+ this.id);
-
-    //console.log("Removal for ", this);
+    //console.log("Disposal of Block "+ this.id);
   }
 
   // Switch off rerendering.
@@ -1072,8 +1066,8 @@ Blockly.Block.prototype.bumpNeighbours_ = function() {
             content = generateContent(blockA.id, blockA.type, "bump", blockB.id);
             sendToDb(dbName, content);
 
-            console.log("Bump away 1 (blocka): ", blockA);
-            console.log("Bump away 1 (blockb): ", blockB);
+            //console.log("Bump away 1 (blocka): ", blockA);
+            //console.log("Bump away 1 (blockb): ", blockB);
             
             otherConnection.bumpAwayFrom_(connection);
           } else {
@@ -1081,8 +1075,8 @@ Blockly.Block.prototype.bumpNeighbours_ = function() {
             sendToDb(dbName, content);
 
             connection.bumpAwayFrom_(otherConnection);
-            console.log("Bump away 2 (blockB): ", blockB);
-            console.log("Bump away 2 (blockA): ", blockA);
+            //console.log("Bump away 2 (blockB): ", blockB);
+            //console.log("Bump away 2 (blockA): ", blockA);
           }
         }
       }
@@ -2136,34 +2130,6 @@ Blockly.Block.prototype.renderDown = function() {
   // [lyn, 04/08/14] Because renderDown is recursive, doesn't make sense to track its time here.
 };
 
-//BXX: Helper function to get UUID
-//Not used due to synch issues
-// var getUUID = function(){
-//      goog.net.XhrIo.send(tracking_url+"/_uuids", function(e){
-//       var xhr = e.target;
-//       var obj = xhr.getResponseJson();
-//       uuid = obj.uuids[0];
-//       return uuid
-//       });
-// };
-
-
-
-// var sendToDb = function(db_url, content, sendToDB){
-//   uuid = generateUUID();
-//   sendToDbHelper(db_url+uuid,content);
-// };
-
-// var sendToDbHelper = function(db_url, content){
-//   goog.net.XhrIo.send(db_url+getUUID(), function(e){
-//         var xhr = e.target;
-//         var obj = xhr.getResponseJson();
-//         console.log("SENT: ", obj);
-//       }, 
-//       "PUT",
-//       content);
-// };
-
 /**
 * Send (PUT) content to db_name(CouchDB instance under tracking_url)
 * @param db_name Name of database/table
@@ -2180,22 +2146,6 @@ sendToDb = function(db_name, content){
   return true;
 };
 
-/**
-* For create and connect actions. Checks DB to see if action already logged.
-* If create/connect for block with certain id already exists, won't log again.
-* (To address "Re-log on start-up" Bug)
-*/
-checkThenSend = function(db_name, content, block_id){
-  //TODO: Figure out how to access features in docs
-  goog.net.XhrIo.send(tracking_url+"/"+db_name+"/_all_docs", function(e){
-      var xhr = e.target;
-      var dbs = xhr.getResponseJson();
-      console.log("DBs: ", dbs);
-    }, 
-    "GET");
-
-  console.log("sent to " + dbName);
-};
 
 /**
 * Generate a random UUID
