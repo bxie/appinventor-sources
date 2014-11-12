@@ -578,6 +578,11 @@ public class BlocklyPanel extends HTMLPanel {
     return Ode.getInstance().getUser().getIsAdmin();
   }
 
+  //BXX
+  public static String getUId() {
+    return Ode.getInstance().getUser().getUserId();
+  }
+
   // Set currentScreen
   // We use this to determine if we should send Yail to a
   // a connected device.
@@ -774,6 +779,8 @@ public class BlocklyPanel extends HTMLPanel {
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::callToggleWarning());
     $wnd.BlocklyPanel_checkIsAdmin =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::checkIsAdmin());
+    $wnd.BlocklyPanel_getUserId = 
+        $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getUId());
     $wnd.BlocklyPanel_indicateDisconnect =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::indicateDisconnect());
     // Note: above lines are longer than 100 chars but I'm not sure whether they can be split
@@ -807,6 +814,7 @@ public class BlocklyPanel extends HTMLPanel {
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedEventName(Ljava/lang/String;));
     $wnd.BlocklyPanel_getLocalizedComponentType =
         $entry(@com.google.appinventor.client.editor.youngandroid.BlocklyPanel::getLocalizedComponentType(Ljava/lang/String;));
+    console.log("Exported Functions to Javascript via GWT");
   }-*/;
 
   private native void initJS() /*-{
