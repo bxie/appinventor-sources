@@ -216,6 +216,8 @@ Blockly.Xml.textToDom = function(text) {
 Blockly.Xml.domToWorkspace = function(workspace, xml) {
   Blockly.Instrument.timer (
       function () {
+        //BXX
+        console.log("BENJI: DOM to Workspace start");
         var width;  // Not used in LTR.
         if (Blockly.RTL) {
           width = workspace.getMetrics().viewWidth;
@@ -234,6 +236,7 @@ Blockly.Xml.domToWorkspace = function(workspace, xml) {
       function (result, timeDiff) {
         Blockly.Instrument.stats.domToWorkspaceCalls++;
         Blockly.Instrument.stats.domToWorkspaceTime = timeDiff;
+        console.log("BENJI: DOM to Workspace end");
       }
   );
 };
@@ -252,6 +255,8 @@ Blockly.Xml.domToWorkspace = function(workspace, xml) {
 Blockly.Xml.domToBlock = function(workspace, xmlBlock, opt_reuseBlock) {
   return Blockly.Instrument.timer (
   function () {
+  //BXX
+  console.log("BENJI: DOM to Block start")
   var block =  Blockly.Xml.domToBlockInner(workspace, xmlBlock, opt_reuseBlock);
   Blockly.Instrument.timer (
   function () {
@@ -289,6 +294,7 @@ Blockly.Xml.domToBlock = function(workspace, xmlBlock, opt_reuseBlock) {
       }
     }
   }
+  console.log("BENJI: DOM to Block end");
   return block;
   },
   function (block, timeDiffOuter) {
