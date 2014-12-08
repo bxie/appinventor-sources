@@ -56,9 +56,9 @@
         tracking_url = 'http://18.102.236.246:5984' //BXX for tracking
 
         //couchDB db name begins with letter, only lower case char in name
-        projectAndScreenId = "proj"+window.location.hash.substr(1).toLowerCase();  
-
-        goog.net.XhrIo.send(tracking_url+"/"+projectAndScreenId, function(e){
+        dbName = "u"+window.parent.BlocklyPanel_getUserId()+'_'+window.location.hash.substr(1).toLowerCase();
+        
+        goog.net.XhrIo.send(tracking_url+"/"+dbName, function(e){
           // We expect window.location.hash to have the form:
           // projectId_formName, and to be unique among
           // all the Blockly instances created in this App Inventor session.
