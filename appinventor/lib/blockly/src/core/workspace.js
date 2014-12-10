@@ -481,3 +481,51 @@ Blockly.Workspace.prototype.remainingCapacity = function() {
 
 // Export symbols that would otherwise be renamed by Closure compiler.
 Blockly.Workspace.prototype['clear'] = Blockly.Workspace.prototype.clear;
+
+//Handles logging of blockly actions (BXX)
+Blockly.Workspace.prototype.sendToDb = function(id, type, action, optional){
+  //Generate random UUID
+  var generateUuid = function(){
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxxxxxxxxxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = (d + Math.random()*16)%16 | 0;
+      d = Math.floor(d/16)
+      return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+  }
+
+  /**
+  * Generates string representation of JSON object to pass to CouchDb
+  * @param {int} id The Block ID number
+  * @param {string} type Block type
+  * @param {string} action The action being done to the block: create, delete, connect, disconnect
+  * @param {string} optional Additional information. Varies by action type.
+  * @return {string} String representation of JSON object
+  */
+  var generateContent = function(id, type, action, optional){
+    if(!optional){
+      optional = "";    
+    }
+    content = '{"blockId":"'+id+'", "type":"'+type+'", "action":"'+action+'", "optional":"'+optional+'", "time":'+Date.now()+'}';
+    //'{"blockId":'+this.id+', "action":"create", "time":'+Date.now()+'}';
+    return content;
+  }
+
+  var tip = 'http://18.102.236.246:5984';
+  var userId = window.parent.BlocklyPanel_getUserId();
+  var projId = window.location.hash.substr(1).toLowerCase();
+  var dbName = 'u'+userId+'_'+projId;
+  var content = generateContent(id, type, action);
+  var uuid = generateUuid();
+
+  goog.net.XhrIo.send(tip+"/"+dbName+"/"+uuid, function(e){
+      var xhr = e.target;
+      var obj = xhr.getResponseJson();
+    },
+    "PUT",
+    content);
+
+  return true;
+
+}
