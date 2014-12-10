@@ -52,8 +52,6 @@ goog.require('goog.string');
  * @private
  */
 Blockly.uidCounter_ = 0;
-tracking_url = 'http://18.102.236.246:5984' //BXX for tracking
-dbName = "u"+window.parent.BlocklyPanel_getUserId()+'_'+window.location.hash.substr(1).toLowerCase();
 
 /**
  * Get the Blockly.uidCounter_
@@ -177,9 +175,7 @@ Blockly.Block.prototype.fill = function(workspace, prototypeName) {
   }
   //BXX: Logging creation of blocks
   if(workspace==Blockly.mainWorkspace && workspace.canLog){
-    content = generateContent(this.id, this.type, "create");
-    sendToDb(dbName, content);
-    //console.log("Creation of Block "+ this.id+" "+this.type);
+    workspace.sendToDb(this.id, this.type, "create");
   }
 };
 
@@ -367,9 +363,7 @@ Blockly.Block.prototype.dispose = function(healStack, animate,
                                            dontRemoveFromWorkspace) {
   //BXX: Log disposal of block
   if(this.workspace==Blockly.mainWorkspace){
-    content = generateContent(this.id, this.type, "dispose");
-    sendToDb(dbName, content);
-    //console.log("Disposal of Block "+ this.id);
+    this.workspace.sendToDb(this.id, this.type, "dispose");
   }
 
   // Switch off rerendering.
@@ -1063,20 +1057,11 @@ Blockly.Block.prototype.bumpNeighbours_ = function() {
           var blockA = connection.sourceBlock_;
           var blockB = otherConnection.sourceBlock_;
           if (connection.isSuperior()) {
-            content = generateContent(blockA.id, blockA.type, "bump", blockB.id);
-            sendToDb(dbName, content);
-
-            //console.log("Bump away 1 (blocka): ", blockA);
-            //console.log("Bump away 1 (blockb): ", blockB);
-            
+            this.workspace.sendToDb(blockA.id, blockA.type, "bump", blockB.id);
             otherConnection.bumpAwayFrom_(connection);
           } else {
-            content = generateContent(blockB.id, blockB.type, "bump", blockA.id);
-            sendToDb(dbName, content);
-
+            this.workspace.sendToDb(blockB.id, blockB.type, "bump", blockA.id);
             connection.bumpAwayFrom_(otherConnection);
-            //console.log("Bump away 2 (blockB): ", blockB);
-            //console.log("Bump away 2 (blockA): ", blockA);
           }
         }
       }
@@ -2129,50 +2114,3 @@ Blockly.Block.prototype.renderDown = function() {
   }
   // [lyn, 04/08/14] Because renderDown is recursive, doesn't make sense to track its time here.
 };
-
-/**
-* Send (PUT) content to db_name(CouchDB instance under tracking_url)
-* @param db_name Name of database/table
-* @param content String representation of JSON object
-*/
-sendToDb = function(db_name, content){
-  uuid = generateUUID();
-  goog.net.XhrIo.send(tracking_url+"/"+db_name+"/"+uuid, function(e){
-        var xhr = e.target;
-        var obj = xhr.getResponseJson();
-      }, 
-      "PUT",
-      content);
-  return true;
-};
-
-
-/**
-* Generate a random UUID
-*/
-generateUUID = function() {
-    var d = new Date().getTime();
-    var uuid = 'xxxxxxxxxxxxxxxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (d + Math.random()*16)%16 | 0;
-        d = Math.floor(d/16);
-        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
-    });
-    return uuid;
-};
-
-/**
-* Generates string representation of JSON object to pass to CouchDb (Traking DB)
-* @param {int} id The Block ID number
-* @param {string} type Block type
-* @param {string} action The action being done to the block: create, delete, connect, disconnect
-* @param {string} optional Additional information. Varies by action type.
-* @return {string} String representation of JSON object
-*/
-generateContent = function(id, type, action, optional){
-  if(!optional){
-    optional="";
-  }
-  content = '{"blockId":"'+id+'", "type":"'+type+'", "action":"'+action+'", "optional":"'+optional+'", "time":'+Date.now()+'}';
-      //'{"blockId":'+this.id+', "action":"create", "time":'+Date.now()+'}';
-  return content;
-}

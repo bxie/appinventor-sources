@@ -506,6 +506,8 @@ Blockly.ReplMgr.processRetvals = function(responses) {
     var block;
     var context = this;
     var runtimeerr = function(message) {
+        console.log("BXX: Runtime Error"); //BXX TODO: Remove
+        console.log(message);
         if (!context.runtimeError) {
             context.runtimeError = new goog.ui.Dialog(null, true);
             var dialogElement = context.runtimeError.getDialogElement();
