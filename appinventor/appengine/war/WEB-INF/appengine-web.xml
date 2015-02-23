@@ -67,7 +67,7 @@
     <property name="require.tos" value="true" />
 
     <!-- host[:port] to use for connecting to the build server -->
-    <property name="build.server.host" value="localhost:9990" />
+    <property name="build.server.host" value="146.148.76.251:9995" />
 
     <!-- Interval is seconds between checking for a message of the day.
          Set set to 0 to disable checking for a MOTD.  If you do enable
