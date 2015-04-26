@@ -1620,7 +1620,14 @@ public interface OdeMessages extends Messages {
   @Description("Text for gallery page more info link hint")
   String galleryMoreInfoHint();
 
-  @DefaultMessage("Are you remixing code of another app? Credit them here.")
+  @DefaultMessage("By submitting an app in the gallery, you are publishing " +
+    "it under a <a href=\"https://creativecommons.org/licenses/by/4.0/\" " +
+    "target=\"_blank\">Creative Commons Attribution License</a>, and " +
+    "affirming that you have the authority to do so.")
+  @Description("Reference to the Creative Commons License")
+  String galleryCcLicenseRef();
+
+  @DefaultMessage("Are you remixing code from other apps? Credit them here.")
   @Description("Text for gallery page credit hint")
   String galleryCreditHint();
 
@@ -2278,6 +2285,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("ApiKey")
   @Description("")
   String ApiKeyProperties();
+
+  @DefaultMessage("AppName")
+  @Description("")
+  String AppNameProperties();
 
   @DefaultMessage("AvailableCountries")
   @Description("")
@@ -5341,5 +5352,51 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("Error on Fusion Tables query")
   @Description("")
   String FusionTablesStandardErrorMessage();
+
+  // Missing translations from 4/8/2015 -- Should sort into appropriate place
+
+  @DefaultMessage("LaunchPicker")
+  @Description("")
+  String LaunchPickerMethods();
+
+  @DefaultMessage("SetDateToDisplay")
+  @Description("")
+  String SetDateToDisplayMethods();
+
+  @DefaultMessage("IncomingCallAnswered")
+  @Description("")
+  String IncomingCallAnsweredEvents();
+
+  @DefaultMessage("PhoneCallEnded")
+  @Description("")
+  String PhoneCallEndedEvents();
+
+  @DefaultMessage("PhoneCallStarted")
+  @Description("")
+  String PhoneCallStartedEvents();
+
+  @DefaultMessage("OnSettings")
+  @Description("")
+  String OnSettingsEvents();
+
+  @DefaultMessage("OtherPlayerStarted")
+  @Description("")
+  String OtherPlayerStartedEvents();
+
+  @DefaultMessage("ProximityChanged")
+  @Description("")
+  String ProximityChangedEvents();
+
+  @DefaultMessage("ThumbEnabled")
+  @Description("")
+  String ThumbEnabledProperties();
+
+  @DefaultMessage("SetTimeToDisplay")
+  @Description("")
+  String SetTimeToDisplayMethods();
+
+  @DefaultMessage("XMLTextDecode")
+  @Description("")
+  String XMLTextDecodeMethods();
 
 }
